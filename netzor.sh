@@ -34,6 +34,20 @@ else
     exit 1
 fi
 
+
+# 3. Setup Keycloak
+echo ">> Step 3: Installing Keycloak..."
+if [ -f "./setup_keycloak.sh" ]; then
+    ./setup_keycloak.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Keycloak setup failed. Exiting."
+        exit 1
+    fi
+else
+    echo "Error: setup_keycloak.sh not found!"
+    exit 1
+fi
+
 echo ""
 echo "=================================================="
 echo "          All operations completed.               "
