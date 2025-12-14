@@ -6,16 +6,16 @@ echo "=================================================="
 echo "          Netzor Infrastructure Manager           "
 echo "=================================================="
 
-# 1. Setup Podman
-echo ">> Step 1: Checking/Installing Podman..."
-if [ -f "./setup_podman.sh" ]; then
-    ./setup_podman.sh
+# 1. Setup Prerequisites (OpenSSL, Podman)
+echo ">> Step 1: Checking/Installing Prerequisites..."
+if [ -f "./setup_prerequisites.sh" ]; then
+    ./setup_prerequisites.sh
     if [ $? -ne 0 ]; then
-        echo "Error: Podman setup failed. Exiting."
+        echo "Error: Prerequisites setup failed. Exiting."
         exit 1
     fi
 else
-    echo "Error: setup_podman.sh not found!"
+    echo "Error: setup_prerequisites.sh not found!"
     exit 1
 fi
 
