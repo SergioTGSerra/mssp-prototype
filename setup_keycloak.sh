@@ -1,5 +1,41 @@
 #!/bin/bash
 
+# ===========================================
+# Check FreeIPA dependency
+# ===========================================
+echo "Checking FreeIPA dependency..."
+
+# Check if FreeIPA container exists and is running
+if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
+    echo "ERROR: FreeIPA container is not running!"
+    echo "Please run setup_freeipa.sh first and wait for it to complete."
+    exit 1
+fi
+
+# Check if FreeIPA LDAP service is actually responding
+echo "Checking if FreeIPA LDAP service is ready..."
+MAX_RETRIES=120
+RETRY_COUNT=0
+
+# Use ldapsearch to verify LDAP is actually responding (anonymous bind to check base DN)
+until podman exec freeipa ldapsearch -x -H ldap://127.0.0.1:389 -b "" -s base "(objectclass=*)" namingContexts >/dev/null 2>&1; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "ERROR: FreeIPA LDAP service is not ready after ${MAX_RETRIES} attempts."
+        echo "The FreeIPA installation may still be in progress. Please wait and try again."
+        echo "You can check the FreeIPA logs with: podman logs -f freeipa"
+        exit 1
+    fi
+    echo "  Attempt ${RETRY_COUNT}/${MAX_RETRIES} - Waiting for FreeIPA LDAP service..."
+    sleep 5
+done
+echo "FreeIPA is ready!"
+echo ""
+
+# ===========================================
+# Keycloak Configuration
+# ===========================================
+
 # Default values
 DEFAULT_ADMIN_USER="admin"
 DEFAULT_HOSTNAME="auth.netzor.pt"
@@ -31,13 +67,13 @@ read -p "Press Enter to execute podman run..."
 
 # 1. Start PostgreSQL
 echo "Starting PostgreSQL..."
-mkdir -p $(pwd)/data/postgres-keycloak-data && \
+mkdir -p $(pwd)/data/postgres-keycloak && \
 podman run --name postgres-keycloak -d \
     --network=netzor-network \
     -e POSTGRES_DB=${DB_NAME} \
     -e POSTGRES_USER=${DB_USER} \
     -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-    -v $(pwd)/data/postgres-keycloak-data:/var/lib/postgresql:Z \
+    -v $(pwd)/data/postgres-keycloak:/var/lib/postgresql:Z \
     docker.io/library/postgres:18-alpine
 
 # Wait for DB to be ready
