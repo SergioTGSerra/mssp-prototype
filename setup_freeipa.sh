@@ -28,7 +28,7 @@ read -p "Press Enter to execute podman run..."
 
 # Execute podman command
 mkdir -p $(pwd)/data/freeipa-data && \
-podman run --name freeipa -ti \
+podman run --name freeipa -d \
     -h ${HOSTNAME} --read-only \
     -v $(pwd)/data/freeipa-data:/data:Z \
     -p 53:53/udp -p 53:53 \
@@ -39,7 +39,7 @@ podman run --name freeipa -ti \
     -p 123:123/udp \
     --dns=127.0.0.1,1.1.1.1,8.8.8.8 \
     quay.io/freeipa/freeipa-server:rocky-9 \
-    # ipa-server-install -U \
+    ipa-server-install -U \
     --realm=${REALM} \
     --ds-password=${DS_PASSWORD} \
     --admin-password=${ADMIN_PASSWORD} \
