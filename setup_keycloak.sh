@@ -41,21 +41,33 @@ podman run --name postgres-keycloak -d \
     docker.io/library/postgres:18-alpine
 
 # Wait for DB to be ready
-echo "Waiting for Database to initialization..."
-sleep 5
+echo "Waiting for PostgreSQL to be ready..."
+MAX_RETRIES=30
+RETRY_COUNT=0
+until podman exec postgres-keycloak pg_isready -U ${DB_USER} -d ${DB_NAME} > /dev/null 2>&1; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "ERROR: PostgreSQL failed to start after ${MAX_RETRIES} attempts."
+        exit 1
+    fi
+    echo "  Attempt ${RETRY_COUNT}/${MAX_RETRIES} - PostgreSQL is not ready yet..."
+    sleep 2
+done
+echo "PostgreSQL is ready!"
 
 # 2. Start Keycloak (Production Mode)
 echo "Starting Keycloak..."
 podman run --name keycloak -d \
     --network=netzor-network \
     -p 8080:8080 \
-    -e KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN} \
-    -e KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \
+    -e KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN} \
+    -e KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \
     -e KC_DB=postgres \
     -e KC_DB_URL=jdbc:postgresql://postgres-keycloak:5432/${DB_NAME} \
     -e KC_DB_USERNAME=${DB_USER} \
     -e KC_DB_PASSWORD=${DB_PASSWORD} \
     -e KC_HOSTNAME=${KEYCLOAK_HOSTNAME} \
+    -e KC_PROXY_HEADERS=xforwarded \
     -e KC_HTTP_ENABLED=true \
     quay.io/keycloak/keycloak:26.4.7 \
     start
