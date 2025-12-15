@@ -31,13 +31,14 @@ read -p "Press Enter to execute podman run..."
 
 # 1. Start PostgreSQL
 echo "Starting PostgreSQL..."
-mkdir -p $(pwd)/data/postgres-keycloak-data
+mkdir -p $(pwd)/data/postgres-keycloak-data && \
 podman run --name postgres-keycloak -d \
+    --network=netzor-network \
     -e POSTGRES_DB=${DB_NAME} \
     -e POSTGRES_USER=${DB_USER} \
     -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-    -v $(pwd)/data/postgres-keycloak-data:/var/lib/postgresql/data:Z \
-    postgres:15-alpine
+    -v $(pwd)/data/postgres-keycloak-data:/var/lib/postgresql:Z \
+    docker.io/library/postgres:18-alpine
 
 # Wait for DB to be ready
 echo "Waiting for Database to initialization..."
@@ -46,6 +47,7 @@ sleep 5
 # 2. Start Keycloak (Production Mode)
 echo "Starting Keycloak..."
 podman run --name keycloak -d \
+    --network=netzor-network \
     -p 8080:8080 \
     -e KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN} \
     -e KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \

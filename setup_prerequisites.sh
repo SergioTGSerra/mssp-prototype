@@ -95,4 +95,22 @@ else
 fi
 
 echo ""
+
+# --- 3. Podman Network ---
+NETWORK_NAME="netzor-network"
+echo ">> Checking Podman Network '${NETWORK_NAME}'..."
+if podman network exists ${NETWORK_NAME} 2>/dev/null; then
+    echo -e "${GREEN}Network '${NETWORK_NAME}' already exists!${NC}"
+else
+    echo "Creating network '${NETWORK_NAME}'..."
+    podman network create ${NETWORK_NAME}
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Network '${NETWORK_NAME}' created successfully!${NC}"
+    else
+        echo -e "${RED}Failed to create network '${NETWORK_NAME}'.${NC}"
+        exit 1
+    fi
+fi
+
+echo ""
 echo "Prerequisites check completed."
