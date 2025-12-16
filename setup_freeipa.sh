@@ -29,6 +29,7 @@ read -p "Press Enter to execute podman run..."
 # Execute podman command
 mkdir -p $(pwd)/data/freeipa && \
 podman run --name freeipa -d \
+    --network=netzor-network \
     -h ${HOSTNAME} --read-only \
     -v $(pwd)/data/freeipa:/data:Z \
     -p 53:53/udp -p 53:53 \

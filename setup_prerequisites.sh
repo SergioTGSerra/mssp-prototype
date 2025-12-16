@@ -102,8 +102,8 @@ echo ">> Checking Podman Network '${NETWORK_NAME}'..."
 if podman network exists ${NETWORK_NAME} 2>/dev/null; then
     echo -e "${GREEN}Network '${NETWORK_NAME}' already exists!${NC}"
 else
-    echo "Creating network '${NETWORK_NAME}'..."
-    podman network create ${NETWORK_NAME}
+    echo "Creating network '${NETWORK_NAME}' with DNS disabled..."
+    podman network create --disable-dns ${NETWORK_NAME}
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Network '${NETWORK_NAME}' created successfully!${NC}"
     else
