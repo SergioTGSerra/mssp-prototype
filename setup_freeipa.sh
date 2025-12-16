@@ -12,9 +12,9 @@ HOSTNAME=${HOSTNAME:-$DEFAULT_HOSTNAME}
 read -p "Enter Realm [${DEFAULT_REALM}]: " REALM
 REALM=${REALM:-$DEFAULT_REALM}
 
-# Generate random passwords
-DS_PASSWORD=$(openssl rand -hex 32)
-ADMIN_PASSWORD=$(openssl rand -hex 32)
+# Generate random passwords (alphanumeric only, 24 chars to avoid PKCS12 issues)
+DS_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
+ADMIN_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
 
 echo "Configuration:"
 echo "  Hostname: ${HOSTNAME}"
@@ -27,7 +27,8 @@ echo ""
 read -p "Press Enter to execute podman run..."
 
 # Execute podman command
-mkdir -p $(pwd)/data/freeipa && \
+mkdir -p $(pwd)/data/freeipa
+
 podman run --name freeipa -d \
     --network=netzor-network \
     --ip 10.90.0.2 \
