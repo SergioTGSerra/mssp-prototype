@@ -70,6 +70,8 @@ echo "Starting PostgreSQL..."
 mkdir -p $(pwd)/data/postgres-keycloak && \
 podman run --name postgres-keycloak -d \
     --network=netzor-network \
+    --ip 10.90.0.4 \
+    --dns=10.90.0.2 \
     -e POSTGRES_DB=${DB_NAME} \
     -e POSTGRES_USER=${DB_USER} \
     -e POSTGRES_PASSWORD=${DB_PASSWORD} \
@@ -95,6 +97,8 @@ echo "PostgreSQL is ready!"
 echo "Starting Keycloak..."
 podman run --name keycloak -d \
     --network=netzor-network \
+    --ip 10.90.0.3 \
+    --dns=10.90.0.2 \
     -p 8080:8080 \
     -e KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN} \
     -e KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \
