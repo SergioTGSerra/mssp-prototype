@@ -103,7 +103,7 @@ podman run --name keycloak -d \
     -e KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN} \
     -e KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \
     -e KC_DB=postgres \
-    -e KC_DB_URL=jdbc:postgresql://postgres-keycloak:5432/${DB_NAME} \
+    -e KC_DB_URL=jdbc:postgresql://10.90.0.4:5432/${DB_NAME} \
     -e KC_DB_USERNAME=${DB_USER} \
     -e KC_DB_PASSWORD=${DB_PASSWORD} \
     -e KC_HOSTNAME=${KEYCLOAK_HOSTNAME} \
