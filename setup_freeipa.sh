@@ -27,15 +27,13 @@ echo ""
 read -p "Press Enter to execute podman run..."
 
 # Execute podman command
-mkdir -p $(pwd)/data/freeipa
-
 podman run --name freeipa -d \
     --network=netzor-network \
     --ip 10.90.0.2 \
     -h ${HOSTNAME} --read-only \
-    -v $(pwd)/data/freeipa:/data:Z \
+    -v freeipa:/data:Z \
     -p 53:53/udp -p 53:53 \
-    -p 80:80 -p 443:443 \
+    -p 80 -p 443 \
     -p 389:389 -p 636:636 \
     -p 88:88 -p 464:464 \
     -p 88:88/udp -p 464:464/udp \

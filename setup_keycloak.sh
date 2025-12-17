@@ -68,7 +68,6 @@ read -p "Press Enter to execute podman run..."
 
 # 1. Start PostgreSQL
 echo "Starting PostgreSQL..."
-mkdir -p $(pwd)/data/postgres-keycloak && \
 podman run --name postgres-keycloak -d \
     --network=netzor-network \
     --ip 10.90.0.4 \
@@ -76,7 +75,7 @@ podman run --name postgres-keycloak -d \
     -e POSTGRES_DB=${DB_NAME} \
     -e POSTGRES_USER=${DB_USER} \
     -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-    -v $(pwd)/data/postgres-keycloak:/var/lib/postgresql:Z \
+    -v postgres-keycloak:/var/lib/postgresql:Z \
     docker.io/library/postgres:18-alpine
 
 # Wait for DB to be ready
