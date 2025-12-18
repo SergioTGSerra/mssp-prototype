@@ -19,10 +19,22 @@ else
     exit 1
 fi
 
-echo ""
+# 2. Setup BunkerWeb (WAF / Reverse Proxy)
+echo ">> Step 2: Installing BunkerWeb (WAF)..."
+if [ -f "./setup_bunkerweb.sh" ]; then
+    chmod +x ./setup_bunkerweb.sh
+    ./setup_bunkerweb.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: BunkerWeb setup failed. Exiting."
+        exit 1
+    fi
+else
+    echo "Error: setup_bunkerweb.sh not found!"
+    exit 1
+fi
 
-# 2. Setup FreeIPA
-echo ">> Step 2: Installing FreeIPA..."
+# 3. Setup FreeIPA
+echo ">> Step 3: Installing FreeIPA..."
 if [ -f "./setup_freeipa.sh" ]; then
     ./setup_freeipa.sh
     if [ $? -ne 0 ]; then
@@ -35,8 +47,8 @@ else
 fi
 
 
-# 3. Setup Keycloak
-echo ">> Step 3: Installing Keycloak..."
+# 4. Setup Keycloak
+echo ">> Step 4: Installing Keycloak..."
 if [ -f "./setup_keycloak.sh" ]; then
     ./setup_keycloak.sh
     if [ $? -ne 0 ]; then
