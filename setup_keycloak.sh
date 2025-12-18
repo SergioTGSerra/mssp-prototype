@@ -12,25 +12,16 @@ if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
     exit 1
 fi
 
-# Check if FreeIPA LDAP service is actually responding
-echo "Checking if FreeIPA LDAP service is ready..."
-MAX_RETRIES=180
-RETRY_COUNT=0
-
 # Use ldapsearch to verify LDAP is actually responding (anonymous bind to check base DN)
-# Check logs for "FreeIPA server configured." message
-until podman logs freeipa 2>&1 | grep -q "FreeIPA server configured."; do
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: FreeIPA server did not fully configure after ${MAX_RETRIES} attempts."
-        echo "The FreeIPA installation may still be in progress or failed."
-        echo "You can check the FreeIPA logs with: podman logs -f freeipa"
-        exit 1
-    fi
-    echo "  Attempt ${RETRY_COUNT}/${MAX_RETRIES} - Waiting for 'FreeIPA server configured.' message in logs..."
-    sleep 5
-done
-echo "FreeIPA is ready!"
+# We assume setup_freeipa.sh has already waited for configuration to complete.
+echo "Verifying FreeIPA container status..."
+
+if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
+    echo "ERROR: FreeIPA container is not running!"
+    exit 1
+fi
+
+echo "FreeIPA is running."
 echo ""
 
 # ===========================================

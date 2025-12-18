@@ -48,3 +48,25 @@ podman run --name freeipa -d \
     --setup-dns \
     --auto-forwarders \
     --allow-zone-overlap
+
+echo ""
+echo "FreeIPA container started."
+echo "Waiting for FreeIPA configuration to complete..."
+echo "Streaming logs until 'FreeIPA server configured.' message appears..."
+echo "------------------------------------------------------------------"
+
+# Start streaming logs in background
+podman logs -f freeipa &
+LOG_PID=$!
+
+# Wait for the configuration message
+until podman logs freeipa 2>&1 | grep -q "FreeIPA server configured."; do
+    sleep 2
+done
+
+# Kill the background log streamer
+kill $LOG_PID
+wait $LOG_PID 2>/dev/null
+
+echo "------------------------------------------------------------------"
+echo "FreeIPA setup completed!"
