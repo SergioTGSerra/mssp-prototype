@@ -4,10 +4,9 @@
 # Setup BunkerWeb AIO (All-In-One)
 # ===========================================
 
-
-# Default Hostnames
-FREEIPA_HOSTNAME="ipa.netzor.pt"
-KEYCLOAK_HOSTNAME="auth.netzor.pt"
+# Use environment variables from netzor.sh or defaults
+FREEIPA_HOSTNAME="${NETZOR_IPA_HOSTNAME:-ipa.netzor.pt}"
+KEYCLOAK_HOSTNAME="${NETZOR_KEYCLOAK_HOSTNAME:-auth.netzor.pt}"
 
 echo "Setting up BunkerWeb AIO..."
 
@@ -40,9 +39,6 @@ podman run -d \
 # Verification
 if [ $? -eq 0 ]; then
     echo "BunkerWeb AIO started successfully."
-    echo "Default Credentials:"
-    echo "  User: admin"
-    echo "  Pass: ChangeMe123!"
 else
     echo "ERROR: Failed to start BunkerWeb AIO."
     exit 1

@@ -12,23 +12,15 @@ if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
 fi
 
 echo "FreeIPA is running."
-echo ""
 
 # ===========================================
 # Keycloak Configuration
 # ===========================================
 
-# Default values
-DEFAULT_ADMIN_USER="admin"
-DEFAULT_HOSTNAME="auth.netzor.pt"
-
-# Prompt for Hostname
-read -p "Enter Keycloak Hostname [${DEFAULT_HOSTNAME}]: " KEYCLOAK_HOSTNAME
-KEYCLOAK_HOSTNAME=${KEYCLOAK_HOSTNAME:-$DEFAULT_HOSTNAME}
-
-# Prompt for Admin User
-read -p "Enter Keycloak Admin Username [${DEFAULT_ADMIN_USER}]: " KEYCLOAK_ADMIN
-KEYCLOAK_ADMIN=${KEYCLOAK_ADMIN:-$DEFAULT_ADMIN_USER}
+# Use environment variables from netzor.sh or defaults
+KEYCLOAK_HOSTNAME="${NETZOR_KEYCLOAK_HOSTNAME:-auth.netzor.pt}"
+IPA_REALM="${NETZOR_REALM:-netzor.pt}"
+KEYCLOAK_ADMIN="admin"
 
 # Generate random passwords
 KEYCLOAK_ADMIN_PASSWORD=$(openssl rand -hex 32)
@@ -36,17 +28,16 @@ DB_PASSWORD=$(openssl rand -hex 32)
 DB_USER="keycloak"
 DB_NAME="keycloak"
 
-# FreeIPA Configuration Prompts
-DEFAULT_IPA_REALM="netzor.pt"
-read -p "Enter FreeIPA Realm [${DEFAULT_IPA_REALM}]: " IPA_REALM
-IPA_REALM=${IPA_REALM:-$DEFAULT_IPA_REALM}
-
-echo "Enter FreeIPA 'keycloak-bind' User Password (output from setup_freeipa.sh):"
-read -s IPA_BIND_PASSWORD
-echo ""
+# Get FreeIPA bind password from environment or credentials file
+if [ -z "${NETZOR_KEYCLOAK_BIND_PASSWORD}" ] && [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
+    source "$NETZOR_CREDENTIALS_FILE"
+    IPA_BIND_PASSWORD="${KEYCLOAK_BIND_PASSWORD}"
+else
+    IPA_BIND_PASSWORD="${NETZOR_KEYCLOAK_BIND_PASSWORD}"
+fi
 
 if [ -z "$IPA_BIND_PASSWORD" ]; then
-    echo "ERROR: FreeIPA Bind Password is required!"
+    echo "ERROR: Could not find keycloak-bind password."
     exit 1
 fi
 
@@ -55,23 +46,14 @@ IPA_BASE_DN="dc=$(echo $IPA_REALM | sed 's/\./,dc=/g')"
 IPA_BIND_DN="uid=keycloak-bind,cn=users,cn=accounts,${IPA_BASE_DN}"
 IPA_USERS_DN="cn=users,cn=accounts,${IPA_BASE_DN}"
 
-echo ""
-echo "FreeIPA Configuration:"
-echo "  Realm: ${IPA_REALM}"
-echo "  Base DN: ${IPA_BASE_DN}"
-echo "  Bind DN: ${IPA_BIND_DN}"
+# Save credentials to temp file for netzor.sh
+if [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
+    cat >> "$NETZOR_CREDENTIALS_FILE" << EOF
+KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+EOF
+fi
 
-echo ""
-echo "Keycloak Configuration:"
-echo "  Hostname: ${KEYCLOAK_HOSTNAME}"
-echo "  Admin User: ${KEYCLOAK_ADMIN}"
-echo "  Admin Password: ${KEYCLOAK_ADMIN_PASSWORD}"
-echo "  Database User: ${DB_USER}"
-echo "  Database Password: ${DB_PASSWORD}"
-echo ""
-
-# Confirm before proceeding
-read -p "Press Enter to execute podman run..."
+echo "Starting Keycloak setup..."
 
 # 1. Start PostgreSQL
 echo "Starting PostgreSQL..."
@@ -96,7 +78,6 @@ until podman exec postgres-keycloak pg_isready -U ${DB_USER} -d ${DB_NAME} > /de
         echo "ERROR: PostgreSQL failed to start after ${MAX_RETRIES} attempts."
         exit 1
     fi
-    echo "  Attempt ${RETRY_COUNT}/${MAX_RETRIES} - PostgreSQL is not ready yet..."
     sleep 2
 done
 echo "PostgreSQL is ready!"
@@ -132,11 +113,10 @@ until podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --serve
         echo "ERROR: Keycloak failed to start/authenticate after ${MAX_RETRIES} attempts."
         exit 1
     fi
-    echo "  Attempt ${RETRY_COUNT}/${MAX_RETRIES} - Keycloak is not ready yet..."
     sleep 5
 done
 
-echo "Keycloak is ready and authenticated!"
+echo "Keycloak is ready!"
 
 echo "Creating 'netzor' realm..."
 if podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
@@ -151,7 +131,7 @@ else
 fi
 
 # 4. Configure FreeIPA LDAP User Federation
-echo "Configuring FreeIPA LDAP User Federation..."
+echo "Configuring FreeIPA LDAP integration..."
 
 # Get the realm ID (needed for parentId)
 REALM_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor --fields id --format csv --noquotes 2>/dev/null | tail -1)
@@ -192,7 +172,7 @@ if podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s 'config.enabled=["true"]' \
     > /dev/null 2>&1; then
     
-    echo "LDAP provider 'freeipa-ldap' configured successfully."
+    echo "LDAP integration configured successfully."
     
     # Trigger sync
     echo "Triggering initial user sync..."
@@ -207,12 +187,4 @@ else
     echo "Check if FreeIPA is reachable and password is correct."
 fi
 
-echo ""
-echo "=================================================="
-echo "Keycloak Setup Complete!"
-echo "URL: https://${KEYCLOAK_HOSTNAME} (via BunkerWeb)"
-echo "Admin Console: https://${KEYCLOAK_HOSTNAME}/admin"
-echo "Admin User: ${KEYCLOAK_ADMIN}"
-echo "Admin Password: ${KEYCLOAK_ADMIN_PASSWORD}"
-echo "LDAP Integration: Active (Realm: ${IPA_REALM})"
-echo "=================================================="
+echo "Keycloak configuration complete."

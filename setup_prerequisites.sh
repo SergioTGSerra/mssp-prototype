@@ -51,22 +51,14 @@ echo ">> Checking OpenSSL..."
 if command -v openssl &> /dev/null; then
     echo -e "${GREEN}OpenSSL is already installed!${NC}"
 else
-    echo -e "${RED}OpenSSL not found.${NC}"
-    read -p "Do you want to install OpenSSL now? [Y/n] " choice
-    case "$choice" in 
-      y|Y|s|S|"" ) 
-        install_package "openssl"
-        if [ $? -eq 0 ]; then
-             echo -e "${GREEN}OpenSSL installed successfully!${NC}"
-        else
-             echo -e "${RED}Failed to install OpenSSL.${NC}"
-             exit 1
-        fi
-        ;;
-      * ) 
-        echo "OpenSSL installation skipped. Some features might not work."
-        ;;
-    esac
+    echo -e "${RED}OpenSSL not found. Installing...${NC}"
+    install_package "openssl"
+    if [ $? -eq 0 ]; then
+         echo -e "${GREEN}OpenSSL installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install OpenSSL.${NC}"
+         exit 1
+    fi
 fi
 
 echo ""
@@ -76,22 +68,14 @@ echo ">> Checking Podman..."
 if command -v podman &> /dev/null; then
     echo -e "${GREEN}Podman is already installed!${NC}"
 else
-    echo -e "${RED}Podman not found.${NC}"
-    read -p "Do you want to install Podman now? [Y/n] " choice
-    case "$choice" in 
-      y|Y|s|S|"" ) 
-        install_package "podman"
-        if [ $? -eq 0 ]; then
-             echo -e "${GREEN}Podman installed successfully!${NC}"
-        else
-             echo -e "${RED}Failed to install Podman.${NC}"
-             exit 1
-        fi
-        ;;
-      * ) 
-        echo "Podman installation skipped."
-        ;;
-    esac
+    echo -e "${RED}Podman not found. Installing...${NC}"
+    install_package "podman"
+    if [ $? -eq 0 ]; then
+         echo -e "${GREEN}Podman installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install Podman.${NC}"
+         exit 1
+    fi
 fi
 
 echo ""
