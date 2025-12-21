@@ -70,3 +70,48 @@ wait $LOG_PID 2>/dev/null
 
 echo "------------------------------------------------------------------"
 echo "FreeIPA setup completed!"
+
+# Generate random password for keycloak-bind system account
+KEYCLOAK_BIND_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
+
+# Create system account and configure password policy (all in one session to preserve Kerberos ticket)
+echo "Creating system account group, policy, and keycloak-bind user..."
+podman exec freeipa bash -c "
+    # Authenticate as admin
+    echo '${ADMIN_PASSWORD}' | kinit admin
+
+    # Create system accounts group
+    ipa group-add system-accounts --desc='System Accounts (No Password Expiry)' 2>/dev/null || echo 'Group already exists'
+
+    # Create password policy for the group (maxlife=0 means no expiry)
+    ipa pwpolicy-add system-accounts --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=8 --priority=1 2>/dev/null || echo 'Policy already exists'
+
+    # Create keycloak-bind system user
+    ipa user-add keycloak-bind \
+        --first=Keycloak \
+        --last=Bind \
+        --cn='Keycloak Bind System Account' \
+        --shell=/sbin/nologin 2>/dev/null || echo 'User already exists'
+
+    # Add user to system-accounts group (applies the no-expiry policy)
+    ipa group-add-member system-accounts --users=keycloak-bind 2>/dev/null || echo 'User already in group'
+
+    # Set password for keycloak-bind
+    echo -e '${KEYCLOAK_BIND_PASSWORD}\n${KEYCLOAK_BIND_PASSWORD}' | ipa passwd keycloak-bind
+
+    # Destroy Kerberos ticket
+    kdestroy
+"
+
+echo "System account configuration complete."
+
+echo ""
+echo "=================================================="
+echo "FreeIPA Setup & Configuration Complete"
+echo "URL: https://${HOSTNAME}"
+echo "Admin Password: ${ADMIN_PASSWORD}"
+echo "DS Password: ${DS_PASSWORD}"
+echo "--------------------------------------------------"
+echo "Keycloak Bind User: keycloak-bind"
+echo "Keycloak Bind Password: ${KEYCLOAK_BIND_PASSWORD}"
+echo "=================================================="
