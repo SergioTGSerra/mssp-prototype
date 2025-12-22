@@ -89,6 +89,21 @@ else
     exit 1
 fi
 
+# 5. Setup Mail Server
+echo ">> Step 5: Installing Mail Server..."
+if [ -f "./setup_mailserver.sh" ]; then
+    ./setup_mailserver.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Mail Server setup failed. Exiting."
+        rm -f "$NETZOR_CREDENTIALS_FILE"
+        exit 1
+    fi
+else
+    echo "Error: setup_mailserver.sh not found!"
+    rm -f "$NETZOR_CREDENTIALS_FILE"
+    exit 1
+fi
+
 # Source all credentials
 source "$NETZOR_CREDENTIALS_FILE"
 
@@ -127,7 +142,17 @@ echo "--------------------------------------------------"
 echo "FreeIPA <-> Keycloak Integration"
 echo "--------------------------------------------------"
 echo "  Bind User: keycloak-bind"
-echo "  Bind Password: ${KEYCLOAK_BIND_PASSWORD}"
+echo "  Bind Password: ${KEYCLOAK_BIND_PASSWORD}
+
+--------------------------------------------------
+Mail Server
+--------------------------------------------------
+  Hostname: mail.${NETZOR_DOMAIN}
+  Ports: 25, 465, 587, 993
+  Bind User: mailserver-bind
+  Bind Password: ${MAILSERVER_BIND_PASSWORD}
+  Log Path: ./docker-data/dms/mail-logs
+"
 echo ""
 echo "=================================================="
 

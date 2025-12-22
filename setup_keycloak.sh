@@ -28,18 +28,56 @@ DB_PASSWORD=$(openssl rand -hex 32)
 DB_USER="keycloak"
 DB_NAME="keycloak"
 
-# Get FreeIPA bind password from environment or credentials file
-if [ -z "${NETZOR_KEYCLOAK_BIND_PASSWORD}" ] && [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
+# Generate random password for keycloak-bind system account
+KEYCLOAK_BIND_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
+IPA_BIND_PASSWORD="${KEYCLOAK_BIND_PASSWORD}"
+
+# ===========================================
+# Create System Account in FreeIPA
+# ===========================================
+echo "Creating system account for Keycloak integration..."
+
+if [ -z "$FREEIPA_ADMIN_PASSWORD" ] && [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
     source "$NETZOR_CREDENTIALS_FILE"
-    IPA_BIND_PASSWORD="${KEYCLOAK_BIND_PASSWORD}"
-else
-    IPA_BIND_PASSWORD="${NETZOR_KEYCLOAK_BIND_PASSWORD}"
 fi
 
-if [ -z "$IPA_BIND_PASSWORD" ]; then
-    echo "ERROR: Could not find keycloak-bind password."
-    exit 1
+if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
+    echo "WARNING: FREEIPA_ADMIN_PASSWORD not found."
+    read -s -p "Enter FreeIPA 'admin' password: " FREEIPA_ADMIN_PASSWORD
+    echo ""
+    if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
+        echo "ERROR: Password is required to create system accounts."
+        exit 1
+    fi
 fi
+
+podman exec freeipa bash -c "
+    # Authenticate as admin
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+
+    # Create system accounts group (idempotent-ish check handled by || true)
+    ipa group-add system-accounts --desc='System Accounts (No Password Expiry)' || true
+
+    # Create password policy for the group (maxlife=0 means no expiry)
+    ipa pwpolicy-add system-accounts --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=8 --priority=1 || true
+
+    # Create keycloak-bind system user
+    ipa user-add keycloak-bind \
+        --first=Keycloak \
+        --last=Bind \
+        --cn='Keycloak Bind System Account' \
+        --shell=/sbin/nologin || true
+
+    # Add user to system-accounts group
+    ipa group-add-member system-accounts --users=keycloak-bind || true
+
+    # Set password
+    echo -e '${KEYCLOAK_BIND_PASSWORD}\n${KEYCLOAK_BIND_PASSWORD}' | ipa passwd keycloak-bind
+    
+    # Destroy Kerberos ticket
+    kdestroy
+"
+
 
 # Calculate Base DN from Realm (e.g., netzor.pt -> dc=netzor,dc=pt)
 IPA_BASE_DN="dc=$(echo $IPA_REALM | sed 's/\./,dc=/g')"
@@ -50,6 +88,7 @@ IPA_USERS_DN="cn=users,cn=accounts,${IPA_BASE_DN}"
 if [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
     cat >> "$NETZOR_CREDENTIALS_FILE" << EOF
 KEYCLOAK_ADMIN_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD}"
+KEYCLOAK_BIND_PASSWORD="${KEYCLOAK_BIND_PASSWORD}"
 EOF
 fi
 
