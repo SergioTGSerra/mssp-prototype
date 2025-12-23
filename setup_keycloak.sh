@@ -207,7 +207,7 @@ if podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s 'config.pagination=["true"]' \
     -s 'config.allowKerberosAuthentication=["false"]' \
     -s 'config.useKerberosForPasswordAuthentication=["false"]' \
-    -s 'config.customUserSearchFilter=["(!(|(uid=admin)(uid=keycloak-bind)))"]' \
+    -s "config.customUserSearchFilter=[\"(!(|(uid=admin)(memberOf=cn=system-accounts,cn=groups,cn=accounts,${IPA_BASE_DN})))\"]" \
     -s 'config.enabled=["true"]' \
     > /dev/null 2>&1; then
     
