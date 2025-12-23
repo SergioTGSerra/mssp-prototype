@@ -91,6 +91,20 @@ echo "System account 'mailserver-bind' created/updated."
 # ===========================================
 echo "Starting Mail Server..."
 
+mkdir -p ./docker-data/mail-data
+mkdir -p ./docker-data/mail-state
+mkdir -p ./docker-data/mail-logs
+mkdir -p ./docker-data/config
+
+# Create custom Dovecot configuration
+cat > ./docker-data/config/dovecot.cf << EOF
+ssl = yes
+disable_plaintext_auth = no
+mail_uid = 5000
+mail_gid = 5000
+EOF
+
+
 podman run -d \
   --name mailserver \
   --hostname ${MAIL_HOSTNAME} \
@@ -99,9 +113,13 @@ podman run -d \
   -p 465:465 \
   -p 587:587 \
   -p 993:993 \
-  -v mailserver:/data:Z \  
+  -p 143:143 \
+  -v ./docker-data/mail-data/:/var/mail:Z \
+  -v ./docker-data/mail-state/:/var/mail-state/:Z \
+  -v ./docker-data/mail-logs/:/var/log/mail/:Z \
+  -v ./docker-data/config/:/tmp/docker-mailserver/:Z \
   -e ACCOUNT_PROVISIONER=LDAP \
-  -e LDAP_SERVER_HOST=10.90.0.3 \
+  -e LDAP_SERVER_HOST=ldap://10.90.0.3 \
   -e LDAP_SEARCH_BASE="${IPA_SEARCH_BASE}" \
   -e LDAP_BIND_DN="${IPA_BIND_DN}" \
   -e LDAP_BIND_PW="${MAILSERVER_BIND_PASSWORD}" \
@@ -111,9 +129,10 @@ podman run -d \
   -e LDAP_QUERY_FILTER_DOMAIN="(|(&(mail=*@%s)(objectClass=inetOrgPerson))(&(mailGroupMember=*@%s)(objectClass=groupOfNames)))" \
   -e DOVECOT_PASS_FILTER="(&(objectClass=inetOrgPerson)(uid=%n))" \
   -e DOVECOT_USER_FILTER="(&(objectClass=inetOrgPerson)(uid=%n))" \
+  -e DOVECOT_AUTH_BIND=yes \
   -e ENABLE_SASLAUTHD=1 \
   -e SASLAUTHD_MECHANISMS=ldap \
-  -e SASLAUTHD_LDAP_SERVER=10.90.0.3 \
+  -e SASLAUTHD_LDAP_SERVER=ldap://10.90.0.3 \
   -e SASLAUTHD_LDAP_BIND_DN="${IPA_BIND_DN}" \
   -e SASLAUTHD_LDAP_PASSWORD="${MAILSERVER_BIND_PASSWORD}" \
   -e SASLAUTHD_LDAP_SEARCH_BASE="${IPA_SEARCH_BASE}" \
@@ -124,12 +143,7 @@ podman run -d \
   -e ENABLE_FAIL2BAN=1 \
   --cap-add NET_ADMIN \
   --restart=always \
-  ghcr.io/docker-mailserver/docker-mailserver:latest \
-  /bin/sh -c "mkdir -p /data/mail /data/mail-state /data/mail-logs /data/config && \
-              ln -s /data/mail /var/mail && \
-              ln -s /data/mail-state /var/mail-state && \
-              ln -s /data/mail-logs /var/log/mail && \
-              ln -s /data/config /tmp/docker-mailserver"
+  ghcr.io/docker-mailserver/docker-mailserver:15.1.0
 
 echo "Mail Server started with hostname ${MAIL_HOSTNAME}"
 echo "LDAP Integration configured with user: ${IPA_BIND_DN}"
