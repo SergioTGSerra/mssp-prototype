@@ -11,8 +11,6 @@ if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
     exit 1
 fi
 
-echo "FreeIPA is running."
-
 # Use environment variables from netzor.sh or defaults
 DOMAIN="${NETZOR_DOMAIN:-netzor.pt}"
 REALM="${NETZOR_REALM:-netzor.pt}"
@@ -93,12 +91,6 @@ echo "System account 'mailserver-bind' created/updated."
 # ===========================================
 echo "Starting Mail Server..."
 
-# Ensure data directories exist (using local path pattern from user request)
-mkdir -p ./docker-data/dms/mail-data
-mkdir -p ./docker-data/dms/mail-state
-mkdir -p ./docker-data/dms/mail-logs
-mkdir -p ./docker-data/dms/config
-
 podman run -d \
   --name mailserver \
   --hostname ${MAIL_HOSTNAME} \
@@ -107,10 +99,7 @@ podman run -d \
   -p 465:465 \
   -p 587:587 \
   -p 993:993 \
-  -v $(pwd)/docker-data/dms/mail-data:/var/mail:Z \
-  -v $(pwd)/docker-data/dms/mail-state:/var/mail-state:Z \
-  -v $(pwd)/docker-data/dms/mail-logs:/var/log/mail:Z \
-  -v $(pwd)/docker-data/dms/config:/tmp/docker-mailserver:Z \
+  -v mailserver:/data:Z \  
   -e ACCOUNT_PROVISIONER=LDAP \
   -e LDAP_SERVER_HOST=10.90.0.3 \
   -e LDAP_SEARCH_BASE="${IPA_SEARCH_BASE}" \
@@ -135,7 +124,12 @@ podman run -d \
   -e ENABLE_FAIL2BAN=1 \
   --cap-add NET_ADMIN \
   --restart=always \
-  ghcr.io/docker-mailserver/docker-mailserver:latest
+  ghcr.io/docker-mailserver/docker-mailserver:latest \
+  /bin/sh -c "mkdir -p /data/mail /data/mail-state /data/mail-logs /data/config && \
+              ln -s /data/mail /var/mail && \
+              ln -s /data/mail-state /var/mail-state && \
+              ln -s /data/mail-logs /var/log/mail && \
+              ln -s /data/config /tmp/docker-mailserver"
 
 echo "Mail Server started with hostname ${MAIL_HOSTNAME}"
 echo "LDAP Integration configured with user: ${IPA_BIND_DN}"
