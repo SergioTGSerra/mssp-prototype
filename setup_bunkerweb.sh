@@ -25,9 +25,7 @@ podman run -d \
     -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
-if [ $? -eq 0 ]; then
-    echo "BunkerWeb AIO started successfully."
-else
+if [ $? -ne 0 ]; then
     echo "ERROR: Failed to start BunkerWeb AIO."
     exit 1
 fi
