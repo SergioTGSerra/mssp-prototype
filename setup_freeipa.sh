@@ -1,20 +1,11 @@
 #!/bin/bash
 
-# Use environment variables from netzor.sh or defaults
-HOSTNAME="${NETZOR_IPA_HOSTNAME:-ipa.netzor.pt}"
-REALM="${NETZOR_REALM:-netzor.pt}"
-
-# Generate random passwords (alphanumeric only, 24 chars to avoid PKCS12 issues)
-DS_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
-ADMIN_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
-
 echo "Starting FreeIPA setup..."
 
-# Execute podman command
 podman run --name freeipa -d \
     --network=netzor-network \
-    --ip 10.90.0.3 \
-    -h ${HOSTNAME} --read-only \
+    --ip ${FREEIPA_IP} \
+    -h ${FREEIPA_HOSTNAME} --read-only \
     -v freeipa:/data:Z \
     -p 53:53/udp -p 53:53 \
     -p 80 -p 443 \
@@ -25,9 +16,9 @@ podman run --name freeipa -d \
     --dns=127.0.0.1,1.1.1.1,8.8.8.8 \
     quay.io/freeipa/freeipa-server:rocky-9 \
     ipa-server-install -U \
-    --realm=${REALM} \
-    --ds-password=${DS_PASSWORD} \
-    --admin-password=${ADMIN_PASSWORD} \
+    --realm=${FREEIPA_REALM} \
+    --ds-password=${FREEIPA_DS_PASSWORD} \
+    --admin-password=${FREEIPA_ADMIN_PASSWORD} \
     --no-ntp \
     --setup-dns \
     --auto-forwarders \

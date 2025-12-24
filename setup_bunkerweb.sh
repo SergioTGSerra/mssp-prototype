@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Import utils and load environment variables
-source ./utils.sh
-load_env
-
-# Run BunkerWeb AIO
 echo "Starting BunkerWeb AIO container..."
 
 podman run -d \
@@ -30,7 +25,6 @@ podman run -d \
     -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
-# Verification
 if [ $? -eq 0 ]; then
     echo "BunkerWeb AIO started successfully."
 else
