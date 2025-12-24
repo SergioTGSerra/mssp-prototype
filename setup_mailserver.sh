@@ -1,23 +1,7 @@
 #!/bin/bash
 
-# ===========================================
-# Create System Account in FreeIPA
-# ===========================================
-echo "Creating system account for Mail Server integration..."
-# We need the admin password to create users. 
-# Attempt to find it if not exported (though netzor.sh exports credentials file source, 
-# the actual password variable might be available if netzor.sh sourced it).
-# Logic in setup_keycloak.sh assumes env vars or saved credentials.
-# We will check if FREEIPA_ADMIN_PASSWORD is set.
-
-if [ -z "$FREEIPA_ADMIN_PASSWORD" ] && [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
-    source "$NETZOR_CREDENTIALS_FILE"
-fi
-
 if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
-    echo "WARNING: FREEIPA_ADMIN_PASSWORD not found."
     read -s -p "Enter FreeIPA 'admin' password: " FREEIPA_ADMIN_PASSWORD
-    echo ""
     if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
         echo "ERROR: Password is required to create system accounts."
         exit 1
@@ -41,66 +25,55 @@ podman exec freeipa bash -c "
     ipa group-add-member system-accounts --users=mailserver-bind 2>/dev/null || true
 
     # Set password
-    echo -e '${MAILSERVER_BIND_PASSWORD}\n${MAILSERVER_BIND_PASSWORD}' | ipa passwd mailserver-bind
+    echo -e '${MAILSERVER_LDAP_BIND_PASSWORD}\n${MAILSERVER_LDAP_BIND_PASSWORD}' | ipa passwd mailserver-bind
 
     # Destroy Kerberos ticket
     kdestroy
 "
 
-echo "System account 'mailserver-bind' created/updated."
-
-# ===========================================
-# Deploy Mail Server
-# ===========================================
-echo "Starting Mail Server..."
-
-mkdir -p ./docker-data/mail-data
-mkdir -p ./docker-data/mail-state
-mkdir -p ./docker-data/mail-logs
-mkdir -p ./docker-data/config
-
-# Create custom Dovecot configuration
-cat > ./docker-data/config/dovecot.cf << EOF
+# Populate config volume with custom Dovecot configuration
+podman volume create mailserver-config > /dev/null 2>&1
+podman run --rm -v mailserver-config:/tmp/docker-mailserver:Z docker.io/library/busybox:latest sh -c "cat > /tmp/docker-mailserver/dovecot.cf << EOF
 ssl = yes
 disable_plaintext_auth = no
 mail_uid = 5000
 mail_gid = 5000
-EOF
-
+EOF"
 
 podman run -d \
   --name mailserver \
-  --hostname ${MAIL_HOSTNAME} \
+  --hostname ${MAILSERVER_HOSTNAME} \
+  --ip ${MAILSERVER_IP} \
   --network=netzor-network \
   -p 25:25 \
   -p 465:465 \
   -p 587:587 \
   -p 993:993 \
   -p 143:143 \
-  -v ./docker-data/mail-data/:/var/mail:Z \
-  -v ./docker-data/mail-state/:/var/mail-state/:Z \
-  -v ./docker-data/mail-logs/:/var/log/mail/:Z \
-  -v ./docker-data/config/:/tmp/docker-mailserver/:Z \
+  -v mailserver-data:/var/mail:Z \
+  -v mailserver-state:/var/mail-state/:Z \
+  -v mailserver-logs:/var/log/mail/:Z \
+  -v mailserver-config:/tmp/docker-mailserver:Z \
   -e ACCOUNT_PROVISIONER=LDAP \
-  -e LDAP_SERVER_HOST=ldap://10.90.0.3 \
-  -e LDAP_SEARCH_BASE="${IPA_SEARCH_BASE}" \
-  -e LDAP_BIND_DN="${IPA_BIND_DN}" \
-  -e LDAP_BIND_PW="${MAILSERVER_BIND_PASSWORD}" \
-  -e LDAP_QUERY_FILTER_USER="(&(objectClass=inetOrgPerson)(mail=%s))" \
+  -e LDAP_SERVER_HOST=ldap://${FREEIPA_IP} \
+  -e LDAP_SEARCH_BASE="cn=accounts,${FREEIPA_BASE_DN}" \
+  -e LDAP_BIND_DN="${MAILSERVER_LDAP_BIND_DN}" \
+  -e LDAP_BIND_PW="${MAILSERVER_LDAP_BIND_PASSWORD}" \
+  -e LDAP_QUERY_FILTER_USER="(&(objectClass=inetOrgPerson)(mail=%s)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))" \
   -e LDAP_QUERY_FILTER_GROUP="(&(objectClass=groupOfNames)(mail=%s))" \
-  -e LDAP_QUERY_FILTER_ALIAS="(&(objectClass=inetOrgPerson)(mail=%s))" \
+  -e LDAP_QUERY_FILTER_ALIAS="(&(objectClass=inetOrgPerson)(mail=%s)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))" \
   -e LDAP_QUERY_FILTER_DOMAIN="(|(&(mail=*@%s)(objectClass=inetOrgPerson))(&(mailGroupMember=*@%s)(objectClass=groupOfNames)))" \
-  -e DOVECOT_PASS_FILTER="(&(objectClass=inetOrgPerson)(uid=%n))" \
-  -e DOVECOT_USER_FILTER="(&(objectClass=inetOrgPerson)(uid=%n))" \
+  -e DOVECOT_PASS_FILTER="(&(objectClass=inetOrgPerson)(uid=%n)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))" \
+  -e DOVECOT_USER_FILTER="(&(objectClass=inetOrgPerson)(uid=%n)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))" \
   -e DOVECOT_AUTH_BIND=yes \
   -e ENABLE_SASLAUTHD=1 \
   -e SASLAUTHD_MECHANISMS=ldap \
-  -e SASLAUTHD_LDAP_SERVER=ldap://10.90.0.3 \
-  -e SASLAUTHD_LDAP_BIND_DN="${IPA_BIND_DN}" \
-  -e SASLAUTHD_LDAP_PASSWORD="${MAILSERVER_BIND_PASSWORD}" \
-  -e SASLAUTHD_LDAP_SEARCH_BASE="${IPA_SEARCH_BASE}" \
-  -e SASLAUTHD_LDAP_FILTER="(&(objectClass=inetOrgPerson)(uid=%U))" \
-  -e POSTMASTER_ADDRESS=postmaster@${DOMAIN} \
+  -e SASLAUTHD_LDAP_SERVER=ldap://${FREEIPA_IP} \
+  -e SASLAUTHD_LDAP_BIND_DN="${MAILSERVER_LDAP_BIND_DN}" \
+  -e SASLAUTHD_LDAP_PASSWORD="${MAILSERVER_LDAP_BIND_PASSWORD}" \
+  -e SASLAUTHD_LDAP_SEARCH_BASE="cn=accounts,${FREEIPA_BASE_DN}" \
+  -e SASLAUTHD_LDAP_FILTER="(&(objectClass=inetOrgPerson)(uid=%U)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))" \
+  -e POSTMASTER_ADDRESS=postmaster@${FREEIPA_REALM} \
   -e ENABLE_RSPAMD=1 \
   -e ENABLE_CLAMAV=1 \
   -e ENABLE_FAIL2BAN=1 \
