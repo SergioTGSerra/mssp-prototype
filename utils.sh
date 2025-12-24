@@ -4,8 +4,6 @@
 load_env() {
     local env_file="${1:-.env}"
     if [ -f "$env_file" ]; then
-        echo "Loading environment variables from $env_file..."
-        # Export each line that is not a comment or empty
         export $(grep -v '^#' "$env_file" | xargs)
     else
         echo "Warning: $env_file not found."

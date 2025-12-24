@@ -1,14 +1,8 @@
 #!/bin/bash
 
-# ===========================================
-# Setup BunkerWeb AIO (All-In-One)
-# ===========================================
-
-# Use environment variables from netzor.sh or defaults
-FREEIPA_HOSTNAME="${NETZOR_IPA_HOSTNAME:-ipa.netzor.pt}"
-KEYCLOAK_HOSTNAME="${NETZOR_KEYCLOAK_HOSTNAME:-auth.netzor.pt}"
-
-echo "Setting up BunkerWeb AIO..."
+# Import utils and load environment variables
+source ./utils.sh
+load_env
 
 # Run BunkerWeb AIO
 echo "Starting BunkerWeb AIO container..."
@@ -16,23 +10,23 @@ echo "Starting BunkerWeb AIO container..."
 podman run -d \
     --name bunkerweb \
     --network=netzor-network \
-    --ip 10.90.0.2 \
+    --ip ${BUNKERWEB_IP} \
     -p 80:8080/tcp \
     -p 443:8443/tcp \
     -p 443:8443/udp \
     -v bunkerweb:/data:Z \
-    -e ADMIN_USERNAME=admin \
-    -e ADMIN_PASSWORD=ChangeMe123! \
+    -e ADMIN_USERNAME=${BUNKERWEB_ADMIN_USERNAME} \
+    -e ADMIN_PASSWORD=${BUNKERWEB_ADMIN_PASSWORD} \
     -e USE_CROWDSEC=yes \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e MULTISITE=yes \
     -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME}" \
     -e "${FREEIPA_HOSTNAME}_USE_REVERSE_PROXY=yes" \
-    -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://10.90.0.3:443" \
+    -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://${FREEIPA_IP}:443" \
     -e "${FREEIPA_HOSTNAME}_SECURITY_MODE=detect" \
     -e "${KEYCLOAK_HOSTNAME}_USE_REVERSE_PROXY=yes" \
-    -e "${KEYCLOAK_HOSTNAME}_REVERSE_PROXY_HOST=http://10.90.0.4:8080" \
+    -e "${KEYCLOAK_HOSTNAME}_REVERSE_PROXY_HOST=http://${KEYCLOAK_IP}:8080" \
     -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
