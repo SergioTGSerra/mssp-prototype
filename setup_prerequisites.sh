@@ -1,16 +1,9 @@
 #!/bin/bash
 
-# setup_prerequisites.sh
-# Script to verify and install prerequisites (OpenSSL, Podman)
-
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
-
-echo "=================================================="
-echo "          Checking Prerequisites                  "
-echo "=================================================="
 
 # Function to detect OS
 detect_os() {
@@ -46,24 +39,6 @@ install_package() {
 
 detect_os
 
-# --- 1. OpenSSL ---
-echo ">> Checking OpenSSL..."
-if command -v openssl &> /dev/null; then
-    echo -e "${GREEN}OpenSSL is already installed!${NC}"
-else
-    echo -e "${RED}OpenSSL not found. Installing...${NC}"
-    install_package "openssl"
-    if [ $? -eq 0 ]; then
-         echo -e "${GREEN}OpenSSL installed successfully!${NC}"
-    else
-         echo -e "${RED}Failed to install OpenSSL.${NC}"
-         exit 1
-    fi
-fi
-
-echo ""
-
-# --- 2. Podman ---
 echo ">> Checking Podman..."
 if command -v podman &> /dev/null; then
     echo -e "${GREEN}Podman is already installed!${NC}"
@@ -80,7 +55,6 @@ fi
 
 echo ""
 
-# --- 3. Podman Network ---
 NETWORK_NAME="netzor-network"
 echo ">> Checking Podman Network '${NETWORK_NAME}'..."
 if podman network exists ${NETWORK_NAME} 2>/dev/null; then
@@ -95,6 +69,3 @@ else
         exit 1
     fi
 fi
-
-echo ""
-echo "Prerequisites check completed."

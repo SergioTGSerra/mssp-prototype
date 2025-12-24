@@ -77,7 +77,7 @@ podman run --name keycloak -d \
 MAX_RETRIES=30
 RETRY_COUNT=0
 
-until podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user ${KEYCLOAK_ADMIN} --password ${KEYCLOAK_ADMIN_PASSWORD} > /dev/null 2>&1; do
+until podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user ${KEYCLOAK_ADMIN_USERNAME} --password ${KEYCLOAK_ADMIN_PASSWORD} > /dev/null 2>&1; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
         echo "ERROR: Keycloak failed to start/authenticate after ${MAX_RETRIES} attempts."
@@ -97,7 +97,7 @@ else
     fi
 fi
 
-if podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
+if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s name="freeipa-ldap" \
     -s providerId=ldap \
     -s providerType=org.keycloak.storage.UserStorageProvider \
@@ -127,7 +127,5 @@ if podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s "config.customUserSearchFilter=[\"(!(|(uid=admin)(memberOf=cn=system-accounts,cn=groups,cn=accounts,${FREEIPA_BASE_DN})))\"]" \
     -s 'config.enabled=["true"]' \
     > /dev/null 2>&1; then
-
-else
     echo "ERROR: Failed to configure LDAP provider."
 fi

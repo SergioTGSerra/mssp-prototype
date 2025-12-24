@@ -20,6 +20,19 @@ podman run --name freeipa -d \
     --ds-password=${FREEIPA_DS_PASSWORD} \
     --no-ntp 
 
+MAX_RETRIES=60
+RETRY_COUNT=0
+# Wait for the configuration completion message in logs
+until podman logs freeipa 2>&1 | grep -q "FreeIPA server configured." || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    sleep 10
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo "ERROR: FreeIPA failed to start/configure in time."
+    exit 1
+fi
+
 # # Start streaming logs in background
 # podman logs -f freeipa &
 # LOG_PID=$!
