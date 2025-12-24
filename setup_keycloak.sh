@@ -13,12 +13,6 @@ podman exec freeipa bash -c "
     # Authenticate as admin
     echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
 
-    # Create system accounts group (idempotent-ish check handled by || true)
-    ipa group-add system-accounts --desc='System Accounts (No Password Expiry)' || true
-
-    # Create password policy for the group (maxlife=0 means no expiry)
-    ipa pwpolicy-add system-accounts --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=8 --priority=1 || true
-
     # Create keycloak-bind system user
     ipa user-add keycloak-bind \
         --first=Keycloak \

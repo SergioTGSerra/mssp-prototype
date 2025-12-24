@@ -1,37 +1,6 @@
 #!/bin/bash
 
 # ===========================================
-# Check FreeIPA dependency
-# ===========================================
-echo "Checking FreeIPA dependency..."
-
-if ! podman ps --format "{{.Names}}" | grep -q "^freeipa$"; then
-    echo "ERROR: FreeIPA container is not running!"
-    echo "Please run setup_freeipa.sh first and wait for it to complete."
-    exit 1
-fi
-
-# Use environment variables from netzor.sh or defaults
-DOMAIN="${NETZOR_DOMAIN:-netzor.pt}"
-REALM="${NETZOR_REALM:-netzor.pt}"
-MAIL_HOSTNAME="mail.${DOMAIN}"
-
-# Generate random password for mailserver-bind system account
-MAILSERVER_BIND_PASSWORD=$(openssl rand -base64 18 | tr -dc 'a-zA-Z0-9')
-
-# Calculate Base DN from Realm (e.g., netzor.pt -> dc=netzor,dc=pt)
-IPA_BASE_DN="dc=$(echo $REALM | sed 's/\./,dc=/g')"
-IPA_BIND_DN="uid=mailserver-bind,cn=users,cn=accounts,${IPA_BASE_DN}"
-IPA_SEARCH_BASE="cn=accounts,${IPA_BASE_DN}"
-
-# Save credentials to temp file for netzor.sh
-if [ -n "$NETZOR_CREDENTIALS_FILE" ]; then
-    cat >> "$NETZOR_CREDENTIALS_FILE" << EOF
-MAILSERVER_BIND_PASSWORD="${MAILSERVER_BIND_PASSWORD}"
-EOF
-fi
-
-# ===========================================
 # Create System Account in FreeIPA
 # ===========================================
 echo "Creating system account for Mail Server integration..."
@@ -58,12 +27,6 @@ fi
 podman exec freeipa bash -c "
     # Authenticate as admin
     echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
-
-    # Create system accounts group if not exists
-    if ! ipa group-show system-accounts >/dev/null 2>&1; then
-        ipa group-add system-accounts --desc='System Accounts (No Password Expiry)'
-        ipa pwpolicy-add system-accounts --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=8 --priority=1
-    fi
 
     # Create mailserver-bind system user if not exists
     if ! ipa user-show mailserver-bind >/dev/null 2>&1; then
@@ -144,6 +107,3 @@ podman run -d \
   --cap-add NET_ADMIN \
   --restart=always \
   ghcr.io/docker-mailserver/docker-mailserver:15.1.0
-
-echo "Mail Server started with hostname ${MAIL_HOSTNAME}"
-echo "LDAP Integration configured with user: ${IPA_BIND_DN}"

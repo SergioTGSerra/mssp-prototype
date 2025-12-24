@@ -33,6 +33,13 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     exit 1
 fi
 
+podman exec freeipa bash -c "
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+    ipa group-add system-accounts --desc='System Accounts (No Password Expiry)' || true
+    ipa pwpolicy-add system-accounts --maxlife=0 --minlife=0 --history=0 --minclasses=0 --minlength=8 --priority=1 || true
+    kdestroy
+"
+
 # # Start streaming logs in background
 # podman logs -f freeipa &
 # LOG_PID=$!

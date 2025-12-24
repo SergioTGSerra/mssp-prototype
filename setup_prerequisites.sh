@@ -53,8 +53,6 @@ else
     fi
 fi
 
-echo ""
-
 NETWORK_NAME="netzor-network"
 echo ">> Checking Podman Network '${NETWORK_NAME}'..."
 if podman network exists ${NETWORK_NAME} 2>/dev/null; then
