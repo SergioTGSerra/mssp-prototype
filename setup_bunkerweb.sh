@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "Starting BunkerWeb AIO container..."
-
 podman run -d \
     --name bunkerweb \
     --network=netzor-network \
@@ -16,13 +14,16 @@ podman run -d \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e MULTISITE=yes \
-    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME}" \
+    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME} ${NEXTCLOUD_HOSTNAME}" \
     -e "${FREEIPA_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://${FREEIPA_IP}:443" \
     -e "${FREEIPA_HOSTNAME}_SECURITY_MODE=detect" \
     -e "${KEYCLOAK_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${KEYCLOAK_HOSTNAME}_REVERSE_PROXY_HOST=http://${KEYCLOAK_IP}:8080" \
     -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
+    -e "${NEXTCLOUD_HOSTNAME}_USE_REVERSE_PROXY=yes" \
+    -e "${NEXTCLOUD_HOSTNAME}_REVERSE_PROXY_HOST=http://${NEXTCLOUD_WEB_IP}:80" \
+    -e "${NEXTCLOUD_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
 if [ $? -ne 0 ]; then

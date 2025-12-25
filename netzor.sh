@@ -74,3 +74,16 @@ else
     echo "Error: setup_mailserver.sh not found!"
     exit 1
 fi
+
+# 6. Setup Nextcloud
+echo ">> Step 6: Installing Nextcloud..."
+if [ -f "./setup_nextcloud.sh" ]; then
+    ./setup_nextcloud.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Nextcloud setup failed. Exiting."
+        exit 1
+    fi
+else
+    echo "Error: setup_nextcloud.sh not found!"
+    exit 1
+fi

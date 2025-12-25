@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo "Starting FreeIPA setup..."
-
 podman run --name freeipa -d \
     --network=netzor-network \
     --ip ${FREEIPA_IP} \
