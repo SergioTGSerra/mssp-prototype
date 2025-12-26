@@ -22,7 +22,7 @@ podman run -d \
     -e "${KEYCLOAK_HOSTNAME}_REVERSE_PROXY_HOST=http://${KEYCLOAK_IP}:8080" \
     -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
     -e "${NEXTCLOUD_HOSTNAME}_USE_REVERSE_PROXY=yes" \
-    -e "${NEXTCLOUD_HOSTNAME}_REVERSE_PROXY_HOST=http://${NEXTCLOUD_WEB_IP}:80" \
+    -e "${NEXTCLOUD_HOSTNAME}_REVERSE_PROXY_HOST=http://${NEXTCLOUD_WEB_IP}" \
     -e "${NEXTCLOUD_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
