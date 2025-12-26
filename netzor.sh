@@ -5,9 +5,9 @@ source ./utils.sh
 load_env
 
 # Prompt for main domain (only user input required)
-read -p "Enter your main domain [${FQDN}]: " USER_FQDN
-FQDN=${USER_FQDN:-$FQDN}
-update_or_create_env FQDN "${FQDN}"
+read -p "Enter your main domain [${DOMAIN}]: " USER_DOMAIN
+DOMAIN=${USER_DOMAIN:-$DOMAIN}
+update_or_create_env DOMAIN "${DOMAIN}"
 
 # 1. Setup Prerequisites (OpenSSL, Podman)
 echo ">> Step 1: Checking/Installing Prerequisites..."
