@@ -61,11 +61,20 @@ podman run -d \
     docker.io/library/nginx:alpine
 
 # Wait for Nginx to start
-sleep 5
+echo "Waiting for Nginx to start..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+    if podman exec nextcloud-web nginx -v > /dev/null 2>&1; then
+        break
+    fi
+    sleep 2
+    timeout=$((timeout - 2))
+done
 
 # Inject Nginx configuration directly into the container
 # We use an unquoted heredoc (EOF) to allow shell expansion for ${NEXTCLOUD_APP_IP}.
 # Nginx variables (like $uri) must be escaped with \ to prevent shell expansion.
+echo ">> Injecting Nginx configuration..."
 cat << EOF | podman exec -i nextcloud-web sh -c 'cat > /etc/nginx/nginx.conf'
 worker_processes auto;
 error_log  /var/log/nginx/error.log warn;
@@ -234,8 +243,15 @@ http {
 }
 EOF
 
-# Reload Nginx to apply the new configuration
-podman exec nextcloud-web nginx -s reload
+# Verify and reload Nginx
+if podman exec nextcloud-web nginx -t; then
+    echo ">> Nginx configuration is valid. Reloading..."
+    podman exec nextcloud-web nginx -s reload
+else
+    echo ">> ERROR: Nginx configuration is invalid!"
+    exit 1
+fi
+
 
 
 
@@ -248,3 +264,9 @@ podman exec nextcloud-web nginx -s reload
 
 # 7. Add Missing Database Indices
 #podman exec -u www-data nextcloud-app php occ db:add-missing-indices
+
+# 8. Disable First Run Wizard and Enable Calendar/Mail Apps
+echo ">> Configuring Nextcloud apps..."
+podman exec -u www-data nextcloud-app php occ app:disable firstrunwizard
+podman exec -u www-data nextcloud-app php occ app:install calendar || podman exec -u www-data nextcloud-app php occ app:enable calendar
+podman exec -u www-data nextcloud-app php occ app:install mail || podman exec -u www-data nextcloud-app php occ app:enable mail
