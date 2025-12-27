@@ -37,6 +37,7 @@ podman run -d \
     --network=netzor-network \
     --ip ${NEXTCLOUD_APP_IP} \
     --add-host ${KEYCLOAK_HOSTNAME}:10.5.81.153 \
+    --add-host ${ROUNDCUBE_HOSTNAME}:10.5.81.153 \
     -e POSTGRES_HOST=${NEXTCLOUD_DB_IP} \
     -e POSTGRES_DB=${NEXTCLOUD_DB_NAME} \
     -e POSTGRES_USER=${NEXTCLOUD_DB_USER} \
