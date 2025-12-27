@@ -88,7 +88,7 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s 'config.batchSizeForSync=["1000"]' \
     -s 'config.editMode=["READ_ONLY"]' \
     -s 'config.syncRegistrations=["false"]' \
-    -s 'config.vendor=["freeipa"]' \
+    -s 'config.vendor=["FreeIPA"]' \
     -s 'config.usernameLDAPAttribute=["uid"]' \
     -s 'config.rdnLDAPAttribute=["uid"]' \
     -s 'config.uuidLDAPAttribute=["ipaUniqueID"]' \
@@ -108,4 +108,13 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s 'config.enabled=["true"]' \
     > /dev/null 2>&1; then
     echo "ERROR: Failed to configure LDAP provider."
+else
+    # Update the default 'first name' mapper to use givenName instead of cn
+    LDAP_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q name=freeipa-ldap | jq -r '.[0].id')
+    MAPPER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q "name=first name" 2>/dev/null | jq -r ".[] | select(.parentId == \"${LDAP_ID}\") | .id")
+    
+    if [ -n "$MAPPER_ID" ] && [ "$MAPPER_ID" != "null" ]; then
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh update components/${MAPPER_ID} -r netzor -s 'config."ldap.attribute"=["givenName"]' > /dev/null 2>&1
+        echo "LDAP mapper 'first name' updated to use 'givenName'."
+    fi
 fi
