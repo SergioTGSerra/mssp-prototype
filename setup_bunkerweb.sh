@@ -29,8 +29,3 @@ podman run -d \
     -e "${ROUNDCUBE_HOSTNAME}_REVERSE_PROXY_HOST=http://${ROUNDCUBE_IP}" \
     -e "${ROUNDCUBE_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to start BunkerWeb AIO."
-    exit 1
-fi
