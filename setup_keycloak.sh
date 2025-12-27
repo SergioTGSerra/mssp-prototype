@@ -1,39 +1,25 @@
 #!/bin/bash
 
-if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
-    echo "WARNING: FREEIPA_ADMIN_PASSWORD not found."
-    read -s -p "Enter FreeIPA 'admin' password: " FREEIPA_ADMIN_PASSWORD
-    if [ -z "$FREEIPA_ADMIN_PASSWORD" ]; then
-        echo "ERROR: Password is required to create system accounts."
-        exit 1
-    fi
-fi
-
+# Add keycloak-bind system user and add it to system-accounts group
 podman exec freeipa bash -c "
-    # Authenticate as admin
     echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
 
-    # Create keycloak-bind system user
     ipa user-add keycloak-bind \
         --first=Keycloak \
         --last=Bind \
         --cn='Keycloak Bind System Account' \
         --shell=/sbin/nologin || true
 
-    # Add user to system-accounts group
     ipa group-add-member system-accounts --users=keycloak-bind || true
 
-    # Set password
     echo -e '${KEYCLOAK_LDAP_BIND_PASSWORD}\n${KEYCLOAK_LDAP_BIND_PASSWORD}' | ipa passwd keycloak-bind
     
-    # Destroy Kerberos ticket
     kdestroy
 "
 
 podman run --name postgres-keycloak -d \
     --network=netzor-network \
     --ip ${KEYCLOAK_DB_IP} \
-    -p 5432 \
     -e POSTGRES_DB=${KEYCLOAK_DB_NAME} \
     -e POSTGRES_USER=${KEYCLOAK_DB_USER} \
     -e POSTGRES_PASSWORD=${KEYCLOAK_DB_PASSWORD} \
@@ -102,7 +88,7 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s 'config.batchSizeForSync=["1000"]' \
     -s 'config.editMode=["READ_ONLY"]' \
     -s 'config.syncRegistrations=["false"]' \
-    -s 'config.vendor=["rhds"]' \
+    -s 'config.vendor=["freeipa"]' \
     -s 'config.usernameLDAPAttribute=["uid"]' \
     -s 'config.rdnLDAPAttribute=["uid"]' \
     -s 'config.uuidLDAPAttribute=["ipaUniqueID"]' \
