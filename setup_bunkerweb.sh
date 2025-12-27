@@ -8,13 +8,14 @@ podman run -d \
     -p 443:8443/tcp \
     -p 443:8443/udp \
     -v bunkerweb:/data:Z \
+    -e SERVER_NAME="www.${DOMAIN}" \
     -e ADMIN_USERNAME=${BUNKERWEB_ADMIN_USERNAME} \
     -e ADMIN_PASSWORD=${BUNKERWEB_ADMIN_PASSWORD} \
     -e USE_CROWDSEC=yes \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e MULTISITE=yes \
-    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME} ${NEXTCLOUD_HOSTNAME}" \
+    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME} ${NEXTCLOUD_HOSTNAME} ${ROUNDCUBE_HOSTNAME}" \
     -e "${FREEIPA_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://${FREEIPA_IP}:443" \
     -e "${FREEIPA_HOSTNAME}_SECURITY_MODE=detect" \
@@ -24,6 +25,9 @@ podman run -d \
     -e "${NEXTCLOUD_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${NEXTCLOUD_HOSTNAME}_REVERSE_PROXY_HOST=http://${NEXTCLOUD_WEB_IP}" \
     -e "${NEXTCLOUD_HOSTNAME}_SECURITY_MODE=detect" \
+    -e "${ROUNDCUBE_HOSTNAME}_USE_REVERSE_PROXY=yes" \
+    -e "${ROUNDCUBE_HOSTNAME}_REVERSE_PROXY_HOST=http://${ROUNDCUBE_IP}" \
+    -e "${ROUNDCUBE_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
 if [ $? -ne 0 ]; then

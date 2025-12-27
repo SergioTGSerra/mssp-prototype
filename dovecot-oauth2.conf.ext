@@ -1,0 +1,8 @@
+introspection_url = http://auth.netzor.pt/realms/netzor/protocol/openid-connect/token/introspect
+introspection_mode = post
+client_id = mailserver
+client_secret = ChangeMeMailserverClientSecret!
+force_introspection = yes
+username_attribute = email
+active_attribute = active
+active_value = true
