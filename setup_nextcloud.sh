@@ -36,6 +36,7 @@ podman run -d \
     --name nextcloud-app \
     --network=netzor-network \
     --ip ${NEXTCLOUD_APP_IP} \
+    --add-host ${KEYCLOAK_HOSTNAME}:10.5.81.153 \
     -e POSTGRES_HOST=${NEXTCLOUD_DB_IP} \
     -e POSTGRES_DB=${NEXTCLOUD_DB_NAME} \
     -e POSTGRES_USER=${NEXTCLOUD_DB_USER} \
@@ -252,10 +253,6 @@ else
     exit 1
 fi
 
-
-
-
-
 # 5. Configure Maintenance Window (4 AM to 8 AM)
 #podman exec -u www-data nextcloud-app php occ config:system:set maintenance_window_start --value=4 --type=integer
 
@@ -313,12 +310,12 @@ fi
 
 # Configure OIDC provider (Keycloak)
 echo ">> Configuring Keycloak OIDC provider..."
-#podman exec -u www-data nextcloud-app php occ config:system:set allow_local_remote_servers --value=true --type=boolean
-#podman exec -u www-data nextcloud-app php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
+podman exec -u www-data nextcloud-app php occ config:system:set allow_local_remote_servers --value=true --type=boolean
+podman exec -u www-data nextcloud-app php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
 
 podman exec -u www-data nextcloud-app php occ user_oidc:provider keycloak \
     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
     --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-    --discoveryuri="https://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration"
+    --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration"
 
 echo ">> Nextcloud OIDC configuration complete."
