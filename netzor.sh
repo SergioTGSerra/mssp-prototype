@@ -4,8 +4,8 @@
 source ./utils.sh
 load_env
 
-# Prompt for main domain (only user input required)
-read -p "Enter your main domain [${DOMAIN}]: " USER_DOMAIN
+# Prompt for domain (only user input required)
+read -p "Enter your domain [${DOMAIN}]: " USER_DOMAIN
 DOMAIN=${USER_DOMAIN:-$DOMAIN}
 update_or_create_env DOMAIN "${DOMAIN}"
 
@@ -17,9 +17,6 @@ if [ -f "./setup_prerequisites.sh" ]; then
         echo "Error: Prerequisites setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_prerequisites.sh not found!"
-    exit 1
 fi
 
 # 2. Setup BunkerWeb (WAF / Reverse Proxy)
@@ -31,9 +28,6 @@ if [ -f "./setup_bunkerweb.sh" ]; then
         echo "Error: BunkerWeb setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_bunkerweb.sh not found!"
-    exit 1
 fi
 
 # 3. Setup FreeIPA
@@ -44,9 +38,6 @@ if [ -f "./setup_freeipa.sh" ]; then
         echo "Error: FreeIPA setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_freeipa.sh not found!"
-    exit 1
 fi
 
 # 4. Setup Keycloak
@@ -57,9 +48,6 @@ if [ -f "./setup_keycloak.sh" ]; then
         echo "Error: Keycloak setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_keycloak.sh not found!"
-    exit 1
 fi
 
 # 5. Setup Mail Server
@@ -70,20 +58,24 @@ if [ -f "./setup_mailserver.sh" ]; then
         echo "Error: Mail Server setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_mailserver.sh not found!"
-    exit 1
 fi
 
-# 6. Setup Nextcloud
-echo ">> Step 6: Installing Nextcloud..."
+# 6. Setup Roundcube
+echo ">> Step 6: Installing Roundcube..."
+if [ -f "./setup_roundcube.sh" ]; then
+    ./setup_roundcube.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Roundcube setup failed. Exiting."
+        exit 1
+    fi
+fi
+
+# 7. Setup Nextcloud
+echo ">> Step 7: Installing Nextcloud..."
 if [ -f "./setup_nextcloud.sh" ]; then
     ./setup_nextcloud.sh
     if [ $? -ne 0 ]; then
         echo "Error: Nextcloud setup failed. Exiting."
         exit 1
     fi
-else
-    echo "Error: setup_nextcloud.sh not found!"
-    exit 1
 fi
