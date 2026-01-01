@@ -79,3 +79,13 @@ if [ -f "./setup_nextcloud.sh" ]; then
         exit 1
     fi
 fi
+
+# 8. Setup GLPI
+echo ">> Step 8: Installing GLPI..."
+if [ -f "./setup_glpi.sh" ]; then
+    ./setup_glpi.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: GLPI setup failed. Exiting."
+        exit 1
+    fi
+fi
