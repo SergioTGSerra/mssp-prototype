@@ -53,6 +53,21 @@ else
     fi
 fi
 
+echo ">> Checking jq..."
+if command -v jq &> /dev/null; then
+    echo -e "${GREEN}jq is already installed!${NC}"
+else
+    echo -e "${RED}jq not found. Installing...${NC}"
+    install_package "jq"
+    if [ $? -eq 0 ]; then
+         echo -e "${GREEN}jq installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install jq.${NC}"
+         exit 1
+    fi
+fi
+
+
 NETWORK_NAME="netzor-network"
 echo ">> Checking Podman Network '${NETWORK_NAME}'..."
 if podman network exists ${NETWORK_NAME} 2>/dev/null; then
