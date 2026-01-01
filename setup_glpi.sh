@@ -56,3 +56,5 @@ until [ "$(podman inspect --format='{{.State.Health.Status}}' glpi)" == "healthy
     fi
     sleep 5
 done
+
+podman exec glpi php bin/console glpi:config:set --url_base=https://${GLPI_HOSTNAME}
