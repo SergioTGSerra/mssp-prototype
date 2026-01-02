@@ -52,22 +52,22 @@ fi
 # 5. Setup Mail Services (Mailserver + Roundcube)
 echo ">> Step 5: Installing Mail Services..."
 if [ -f "./mail/setup.sh" ]; then
-    (cd mail && ./setup.sh)
+    ./mail/setup.sh
     if [ $? -ne 0 ]; then
         echo "Error: Mail Services setup failed. Exiting."
         exit 1
     fi
 fi
 
-# # 7. Setup Nextcloud
-# echo ">> Step 7: Installing Nextcloud..."
-# if [ -f "./setup_nextcloud.sh" ]; then
-#     ./setup_nextcloud.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Nextcloud setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
+# 6. Setup Nextcloud
+echo ">> Step 6: Installing Nextcloud..."
+if [ -f "./nextcloud/setup.sh" ]; then
+    ./nextcloud/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Nextcloud setup failed. Exiting."
+        exit 1
+    fi
+fi
 
 # # 8. Setup GLPI
 # echo ">> Step 8: Installing GLPI..."
