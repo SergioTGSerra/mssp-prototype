@@ -67,18 +67,42 @@ else
     fi
 fi
 
-
-NETWORK_NAME="netzor-network"
-echo ">> Checking Podman Network '${NETWORK_NAME}'..."
-if podman network exists ${NETWORK_NAME} 2>/dev/null; then
-    echo -e "${GREEN}Network '${NETWORK_NAME}' already exists!${NC}"
+echo ">> Checking podman-compose..."
+if command -v podman-compose &> /dev/null; then
+    echo -e "${GREEN}podman-compose is already installed!${NC}"
 else
-    echo "Creating network '${NETWORK_NAME}' with DNS disabled..."
-    podman network create --subnet 10.90.0.0/16 --gateway 10.90.0.1 --disable-dns ${NETWORK_NAME}
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Network '${NETWORK_NAME}' created successfully!${NC}"
+    echo -e "${RED}podman-compose not found. Installing...${NC}"
+    if [[ "$OS" == "fedora" || "$OS" == "centos" || "$OS" == "rhel" || "$LIKE" == *"rhel"* || "$LIKE" == *"fedora"* ]]; then
+        sudo dnf install -y 'dnf-command(config-manager)'
+        sudo dnf config-manager --set-enabled crb
+        sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        sudo dnf install -y podman-compose
+    elif [[ "$OS" == "debian" || "$OS" == "ubuntu" || "$LIKE" == *"debian"* ]]; then
+        sudo apt-get update && sudo apt-get install -y podman-compose
     else
-        echo -e "${RED}Failed to create network '${NETWORK_NAME}'.${NC}"
-        exit 1
+         echo "OS not automatically supported for podman-compose installation."
+         exit 1
+    fi
+     
+    if command -v podman-compose &> /dev/null; then
+         echo -e "${GREEN}podman-compose installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install podman-compose.${NC}"
+         exit 1
     fi
 fi
+
+# NETWORK_NAME="netzor-network"
+# echo ">> Checking Podman Network '${NETWORK_NAME}'..."
+# if podman network exists ${NETWORK_NAME} 2>/dev/null; then
+#     echo -e "${GREEN}Network '${NETWORK_NAME}' already exists!${NC}"
+# else
+#     echo "Creating network '${NETWORK_NAME}' with DNS disabled..."
+#     podman network create --subnet 10.90.0.0/16 --gateway 10.90.0.1 --disable-dns ${NETWORK_NAME}
+#     if [ $? -eq 0 ]; then
+#         echo -e "${GREEN}Network '${NETWORK_NAME}' created successfully!${NC}"
+#     else
+#         echo -e "${RED}Failed to create network '${NETWORK_NAME}'.${NC}"
+#         exit 1
+#     fi
+# fi

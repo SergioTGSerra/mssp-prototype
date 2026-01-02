@@ -1,12 +1,11 @@
 #!/bin/bash
 
+podman network create ipa
+
 podman run --name freeipa -d \
-    --network=netzor-network \
-    --ip ${FREEIPA_IP} \
+    --network=ipa \
     -h ${FREEIPA_HOSTNAME} --read-only \
     -v freeipa:/data:Z \
-    -p 53:53/udp -p 53:53 \
-    -p 80 -p 443 \
     -p 389:389 -p 636:636 \
     -p 88:88 -p 464:464 \
     -p 88:88/udp -p 464:464/udp \
@@ -17,6 +16,8 @@ podman run --name freeipa -d \
     --admin-password=${FREEIPA_ADMIN_PASSWORD} \
     --ds-password=${FREEIPA_DS_PASSWORD} \
     --no-ntp 
+
+podman network connect waf freeipa
 
 MAX_RETRIES=60
 RETRY_COUNT=0
@@ -40,6 +41,7 @@ podman exec freeipa bash -c "
 "
 
 # FREEIPA DNS
+    # -p 53:53/udp -p 53:53 \
     # --dns=127.0.0.1,1.1.1.1,8.8.8.8 \
     # --setup-dns \
     # --auto-forwarders \
