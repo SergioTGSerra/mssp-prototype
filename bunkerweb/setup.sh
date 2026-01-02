@@ -19,10 +19,13 @@ podman run -d \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e MULTISITE=yes \
-    -e SERVER_NAME="${FREEIPA_HOSTNAME}" \
+    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME}" \
     -e "${FREEIPA_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://freeipa" \
     -e "${FREEIPA_HOSTNAME}_SECURITY_MODE=detect" \
+    -e "${KEYCLOAK_HOSTNAME}_USE_REVERSE_PROXY=yes" \
+    -e "${KEYCLOAK_HOSTNAME}_REVERSE_PROXY_HOST=http://keycloak:8080" \
+    -e "${KEYCLOAK_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
 
 

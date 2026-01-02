@@ -91,18 +91,3 @@ else
          exit 1
     fi
 fi
-
-# NETWORK_NAME="netzor-network"
-# echo ">> Checking Podman Network '${NETWORK_NAME}'..."
-# if podman network exists ${NETWORK_NAME} 2>/dev/null; then
-#     echo -e "${GREEN}Network '${NETWORK_NAME}' already exists!${NC}"
-# else
-#     echo "Creating network '${NETWORK_NAME}' with DNS disabled..."
-#     podman network create --subnet 10.90.0.0/16 --gateway 10.90.0.1 --disable-dns ${NETWORK_NAME}
-#     if [ $? -eq 0 ]; then
-#         echo -e "${GREEN}Network '${NETWORK_NAME}' created successfully!${NC}"
-#     else
-#         echo -e "${RED}Failed to create network '${NETWORK_NAME}'.${NC}"
-#         exit 1
-#     fi
-# fi

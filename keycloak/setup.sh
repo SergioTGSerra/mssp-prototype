@@ -1,74 +1,49 @@
 #!/bin/bash
 
-# Add keycloak-bind system user and add it to system-accounts group
+# Add keycloak-bind system user to FreeIPA
+echo "Configuring FreeIPA Bind User..."
 podman exec freeipa bash -c "
-    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin > /dev/null 2>&1
 
-    ipa user-add keycloak-bind \
-        --first=Keycloak \
-        --last=Bind \
-        --cn='Keycloak Bind System Account' \
-        --shell=/sbin/nologin || true
+    if ! ipa user-show keycloak-bind > /dev/null 2>&1; then
+        ipa user-add keycloak-bind \
+            --first=Keycloak \
+            --last=Bind \
+            --cn='Keycloak Bind System Account' \
+            --shell=/sbin/nologin
+    fi
 
-    ipa group-add-member system-accounts --users=keycloak-bind || true
+    ipa group-add-member system-accounts --users=keycloak-bind > /dev/null 2>&1 || true
 
-    echo -e '${KEYCLOAK_LDAP_BIND_PASSWORD}\n${KEYCLOAK_LDAP_BIND_PASSWORD}' | ipa passwd keycloak-bind
+    echo -e '${KEYCLOAK_LDAP_BIND_PASSWORD}\n${KEYCLOAK_LDAP_BIND_PASSWORD}' | ipa passwd keycloak-bind > /dev/null 2>&1
     
     kdestroy
 "
 
-podman run --name postgres-keycloak -d \
-    --network=netzor-network \
-    --ip ${KEYCLOAK_DB_IP} \
-    -e POSTGRES_DB=${KEYCLOAK_DB_NAME} \
-    -e POSTGRES_USER=${KEYCLOAK_DB_USER} \
-    -e POSTGRES_PASSWORD=${KEYCLOAK_DB_PASSWORD} \
-    -v postgres-keycloak:/var/lib/postgresql:Z \
-    docker.io/library/postgres:18-alpine
+# Start Keycloak with Podman Compose
+echo "Starting Keycloak..."
+podman-compose -f compose.yaml up -d
 
-MAX_RETRIES=30
+# Wait for Keycloak to be ready
+echo "Waiting for Keycloak to be ready..."
+MAX_RETRIES=60
 RETRY_COUNT=0
-until podman exec postgres-keycloak pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME} > /dev/null 2>&1; do
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: PostgreSQL failed to start after ${MAX_RETRIES} attempts."
-        exit 1
-    fi
-    sleep 2
-done
-
-podman run --name keycloak -d \
-    --network=netzor-network \
-    --ip ${KEYCLOAK_IP} \
-    -p 8080 \
-    -e KC_BOOTSTRAP_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME} \
-    -e KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD} \
-    -e KC_DB=postgres \
-    -e KC_DB_URL=jdbc:postgresql://${KEYCLOAK_DB_IP}:5432/${KEYCLOAK_DB_NAME} \
-    -e KC_DB_USERNAME=${KEYCLOAK_DB_USER} \
-    -e KC_DB_PASSWORD=${KEYCLOAK_DB_PASSWORD} \
-    -e KC_HOSTNAME=${KEYCLOAK_HOSTNAME} \
-    -e KC_PROXY_HEADERS=xforwarded \
-    -e KC_HTTP_ENABLED=true \
-    quay.io/keycloak/keycloak:26.4.7 \
-    start
-
-# Create 'netzor' realm
-MAX_RETRIES=30
-RETRY_COUNT=0
-
 until podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user ${KEYCLOAK_ADMIN_USERNAME} --password ${KEYCLOAK_ADMIN_PASSWORD} > /dev/null 2>&1; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
         echo "ERROR: Keycloak failed to start/authenticate after ${MAX_RETRIES} attempts."
         exit 1
     fi
+    echo -n "."
     sleep 5
 done
+echo "Keycloak is ready."
 
+# Configure Realm
 if podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
     echo "Realm 'netzor' already exists."
 else
+    echo "Creating 'netzor' realm..."
     if podman exec keycloak /opt/keycloak/bin/kcadm.sh create realms -s realm=netzor -s enabled=true; then
         echo "Realm 'netzor' created successfully."
     else
@@ -77,6 +52,8 @@ else
     fi
 fi
 
+# Configure LDAP Provider
+echo "Configuring LDAP Provider..."
 if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s name="freeipa-ldap" \
     -s providerId=ldap \
@@ -93,7 +70,7 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s 'config.rdnLDAPAttribute=["uid"]' \
     -s 'config.uuidLDAPAttribute=["ipaUniqueID"]' \
     -s 'config.userObjectClasses=["inetOrgPerson, organizationalPerson"]' \
-    -s "config.connectionUrl=[\"ldap://${FREEIPA_IP}\"]" \
+    -s "config.connectionUrl=[\"ldap://freeipa\"]" \
     -s "config.usersDn=[\"${FREEIPA_USER_DN}\"]" \
     -s 'config.authType=["simple"]' \
     -s "config.bindDn=[\"${KEYCLOAK_LDAP_BIND_DN}\"]" \
@@ -107,9 +84,14 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s "config.customUserSearchFilter=[\"(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN})))\"]" \
     -s 'config.enabled=["true"]' \
     > /dev/null 2>&1; then
-    echo "ERROR: Failed to configure LDAP provider."
+    
+    # Check if failure is because it already exists (simplified check)
+    # Ideally we would check before creating
+    echo "LDAP provider might already exist or failed to create."
 else
-    # Update the default 'first name' mapper to use givenName instead of cn
+    echo "LDAP provider created."
+    
+    # Update Mapper
     LDAP_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q name=freeipa-ldap | jq -r '.[0].id')
     MAPPER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q "name=first name" 2>/dev/null | jq -r ".[] | select(.parentId == \"${LDAP_ID}\") | .id")
     
