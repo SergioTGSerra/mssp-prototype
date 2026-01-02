@@ -39,15 +39,15 @@ if [ -f "./freeipa/setup.sh" ]; then
     fi
 fi
 
-# # 4. Setup Keycloak
-# echo ">> Step 4: Installing Keycloak..."
-# if [ -f "./setup_keycloak.sh" ]; then
-#     ./setup_keycloak.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Keycloak setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
+# 4. Setup Keycloak
+echo ">> Step 4: Installing Keycloak..."
+if [ -f "./keycloak/setup.sh" ]; then
+    ./keycloak/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Keycloak setup failed. Exiting."
+        exit 1
+    fi
+fi
 
 # # 5. Setup Mail Server
 # echo ">> Step 5: Installing Mail Server..."
