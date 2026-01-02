@@ -49,25 +49,15 @@ if [ -f "./keycloak/setup.sh" ]; then
     fi
 fi
 
-# # 5. Setup Mail Server
-# echo ">> Step 5: Installing Mail Server..."
-# if [ -f "./setup_mailserver.sh" ]; then
-#     ./setup_mailserver.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Mail Server setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
-
-# # 6. Setup Roundcube
-# echo ">> Step 6: Installing Roundcube..."
-# if [ -f "./setup_roundcube.sh" ]; then
-#     ./setup_roundcube.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Roundcube setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
+# 5. Setup Mail Services (Mailserver + Roundcube)
+echo ">> Step 5: Installing Mail Services..."
+if [ -f "./mail/setup.sh" ]; then
+    (cd mail && ./setup.sh)
+    if [ $? -ne 0 ]; then
+        echo "Error: Mail Services setup failed. Exiting."
+        exit 1
+    fi
+fi
 
 # # 7. Setup Nextcloud
 # echo ">> Step 7: Installing Nextcloud..."
