@@ -20,13 +20,20 @@ detect_os() {
 # Function to install a package
 install_package() {
     PACKAGE_NAME=$1
+    # Use sudo only if not running as root
+    if [ "$(id -u)" -eq 0 ]; then
+        SUDO_CMD=""
+    else
+        SUDO_CMD="sudo "
+    fi
+
     if [[ "$OS" == "debian" || "$OS" == "ubuntu" || "$LIKE" == *"debian"* ]]; then
-        CMD="sudo apt-get update && sudo apt-get install -y $PACKAGE_NAME"
+        CMD="${SUDO_CMD}apt-get update && ${SUDO_CMD}apt-get install -y $PACKAGE_NAME"
     elif [[ "$OS" == "fedora" || "$OS" == "centos" || "$OS" == "rhel" || "$LIKE" == *"rhel"* || "$LIKE" == *"fedora"* ]]; then
         if command -v dnf &> /dev/null; then
-            CMD="sudo dnf install -y $PACKAGE_NAME"
+            CMD="${SUDO_CMD}dnf install -y $PACKAGE_NAME"
         else
-            CMD="sudo yum install -y $PACKAGE_NAME"
+            CMD="${SUDO_CMD}yum install -y $PACKAGE_NAME"
         fi
     else
         echo "OS not automatically supported for installation."
@@ -38,6 +45,24 @@ install_package() {
 }
 
 detect_os
+
+echo ">> Checking sudo..."
+if command -v sudo &> /dev/null; then
+    echo -e "${GREEN}sudo is already installed!${NC}"
+else
+    echo -e "${RED}sudo not found. Installing...${NC}"
+    if [ "$(id -u)" -ne 0 ]; then
+        echo -e "${RED}Cannot install sudo without root access. Please run as root or install sudo manually.${NC}"
+        exit 1
+    fi
+    install_package "sudo"
+    if command -v sudo &> /dev/null; then
+        echo -e "${GREEN}sudo installed successfully!${NC}"
+    else
+        echo -e "${RED}Failed to install sudo.${NC}"
+        exit 1
+    fi
+fi
 
 echo ">> Checking Podman..."
 if command -v podman &> /dev/null; then
@@ -78,7 +103,14 @@ else
         sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
         sudo dnf install -y podman-compose
     elif [[ "$OS" == "debian" || "$OS" == "ubuntu" || "$LIKE" == *"debian"* ]]; then
-        sudo apt-get update && sudo apt-get install -y podman-compose
+        sudo apt-get update
+        if apt-cache show podman-compose &> /dev/null; then
+            sudo apt-get install -y podman-compose
+        else
+            echo -e "${RED}podman-compose not in apt repos, installing via pip...${NC}"
+            sudo apt-get install -y python3-pip
+            pip3 install podman-compose
+        fi
     else
          echo "OS not automatically supported for podman-compose installation."
          exit 1
