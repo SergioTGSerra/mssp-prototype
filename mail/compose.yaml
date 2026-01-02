@@ -99,8 +99,11 @@ networks:
 
 volumes:
   mailserver-data:
+    name: mailserver-data
   mailserver-state:
+    name: mailserver-state
   mailserver-logs:
+    name: mailserver-logs
   mailserver-config:
     external: true
   roundcube-config:

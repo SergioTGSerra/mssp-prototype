@@ -72,6 +72,10 @@ networks:
 
 volumes:
   nextcloud-db:
+    name: nextcloud-db
   nextcloud-redis-data:
+    name: nextcloud-redis-data
   nextcloud-data:
+    name: nextcloud-data
   nextcloud-config:
+    name: nextcloud-config

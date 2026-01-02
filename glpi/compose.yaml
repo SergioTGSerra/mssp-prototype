@@ -45,7 +45,9 @@ services:
 
 volumes:
   glpi-db:
+    name: glpi-db
   glpi:
+    name: glpi
 
 networks:
   glpi:
