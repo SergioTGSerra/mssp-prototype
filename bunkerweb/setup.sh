@@ -18,7 +18,7 @@ podman run -d \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e MULTISITE=yes \
-    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME} ${ROUNDCUBE_HOSTNAME} ${NEXTCLOUD_HOSTNAME}" \
+    -e SERVER_NAME="${FREEIPA_HOSTNAME} ${KEYCLOAK_HOSTNAME} ${ROUNDCUBE_HOSTNAME} ${NEXTCLOUD_HOSTNAME} ${GLPI_HOSTNAME}" \
     -e "${FREEIPA_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${FREEIPA_HOSTNAME}_REVERSE_PROXY_HOST=https://freeipa" \
     -e "${FREEIPA_HOSTNAME}_SECURITY_MODE=detect" \
@@ -31,4 +31,7 @@ podman run -d \
     -e "${NEXTCLOUD_HOSTNAME}_USE_REVERSE_PROXY=yes" \
     -e "${NEXTCLOUD_HOSTNAME}_REVERSE_PROXY_HOST=http://nextcloud-web" \
     -e "${NEXTCLOUD_HOSTNAME}_SECURITY_MODE=detect" \
+    -e "${GLPI_HOSTNAME}_USE_REVERSE_PROXY=yes" \
+    -e "${GLPI_HOSTNAME}_REVERSE_PROXY_HOST=http://glpi" \
+    -e "${GLPI_HOSTNAME}_SECURITY_MODE=detect" \
     docker.io/bunkerity/bunkerweb-all-in-one:1.6.6

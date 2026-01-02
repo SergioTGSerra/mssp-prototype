@@ -1,0 +1,55 @@
+services:
+
+  glpi-db:
+    image: docker.io/library/mysql:9.5
+    container_name: glpi-db
+    networks:
+      - glpi
+    volumes:
+      - glpi-db:/var/lib/mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=${GLPI_DB_NAME}
+      - MYSQL_USER=${GLPI_DB_USER}
+      - MYSQL_PASSWORD=${GLPI_DB_PASSWORD}
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-u', '$MYSQL_USER', '--password=$MYSQL_PASSWORD']
+      interval: 5s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+      
+  glpi:
+    image: glpi/glpi:11.0.4
+    container_name: glpi
+    networks:
+      - glpi
+      - waf
+    volumes:
+      - glpi:/var/glpi
+    environment:
+      - GLPI_DB_HOST=glpi-db
+      - GLPI_DB_PORT=3306
+      - GLPI_DB_NAME=${GLPI_DB_NAME}
+      - GLPI_DB_USER=${GLPI_DB_USER}
+      - GLPI_DB_PASSWORD=${GLPI_DB_PASSWORD}
+    healthcheck:
+      test: ['CMD', 'php', 'bin/console', 'system:status', '--allow-superuser']
+      interval: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    depends_on:
+      glpi-db:
+        condition: service_healthy
+
+volumes:
+  glpi-db:
+  glpi:
+
+networks:
+  glpi:
+    name: glpi
+    driver: bridge
+  waf:
+    external: true

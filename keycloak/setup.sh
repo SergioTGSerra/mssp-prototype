@@ -22,7 +22,7 @@ podman exec freeipa bash -c "
 
 # Start Keycloak with Podman Compose
 echo "Starting Keycloak..."
-podman-compose -f compose.yaml up -d
+podman-compose -f $PWD/keycloak/compose.yaml up -d
 
 # Wait for Keycloak to be ready
 echo "Waiting for Keycloak to be ready..."

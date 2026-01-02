@@ -1,6 +1,6 @@
 #!/bin/bash
 
-podman-compose -f compose.yaml up -d
+podman-compose -f $PWD/nextcloud/compose.yaml up -d
 
 # 5. Configure Maintenance Window (4 AM to 8 AM)
 #podman exec -u www-data nextcloud-app php occ config:system:set maintenance_window_start --value=4 --type=integer

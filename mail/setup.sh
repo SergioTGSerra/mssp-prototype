@@ -205,4 +205,4 @@ export KEYCLOAK_CONTAINER_IP
 echo "Keycloak IP: ${KEYCLOAK_CONTAINER_IP}"
 
 echo ">> Starting Mail Services..."
-podman-compose -f compose.yaml up -d
+podman-compose -f $PWD/mail/compose.yaml up -d
