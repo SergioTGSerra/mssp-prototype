@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
       
   glpi:
-    image: glpi/glpi:11.0.4
+    image: docker.io/glpi/glpi:11.0.4
     container_name: glpi
     networks:
       - glpi
