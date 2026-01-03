@@ -78,3 +78,13 @@ if [ -f "./glpi/setup.sh" ]; then
         exit 1
     fi
 fi
+
+# 8. Setup IRIS
+echo ">> Step 8: Installing IRIS..."
+if [ -f "./iris/setup.sh" ]; then
+    ./iris/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: IRIS setup failed. Exiting."
+        exit 1
+    fi
+fi
