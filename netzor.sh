@@ -88,3 +88,13 @@ if [ -f "./iris/setup.sh" ]; then
         exit 1
     fi
 fi
+
+# 9. Setup Guacamole
+echo ">> Step 9: Installing Guacamole..."
+if [ -f "./guacamole/setup.sh" ]; then
+    ./guacamole/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Guacamole setup failed. Exiting."
+        exit 1
+    fi
+fi

@@ -1,0 +1,58 @@
+volumes:
+  guacamole_data:
+  postgres_data:
+
+services:
+  postgres:
+    container_name: guacamole_postgres
+    image: docker.io/library/postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=${GUACAMOLE_DB_USER}
+      - POSTGRES_PASSWORD=${GUACAMOLE_DB_PASSWORD}
+      - POSTGRES_DB=${GUACAMOLE_DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - guacamole
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${GUACAMOLE_DB_USER} -d ${GUACAMOLE_DB_NAME}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  guacd:
+    container_name: guacd
+    image: docker.io/guacamole/guacd:latest
+    restart: always
+    networks:
+      - guacamole
+
+  guacamole:
+    container_name: guacamole
+    image: docker.io/guacamole/guacamole:latest
+    restart: always
+    environment:
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - POSTGRESQL_HOSTNAME=guacamole_postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=${GUACAMOLE_DB_NAME}
+      - POSTGRESQL_USER=${GUACAMOLE_DB_USER}
+      - POSTGRESQL_PASSWORD=${GUACAMOLE_DB_PASSWORD}
+      - WEBAPP_CONTEXT=ROOT
+    depends_on:
+      postgres:
+        condition: service_healthy
+      guacd:
+        condition: service_started
+    networks:
+      - guacamole
+      - waf
+
+networks:
+  guacamole:
+    name: guacamole
+    driver: bridge
+  waf:
+    external: true
