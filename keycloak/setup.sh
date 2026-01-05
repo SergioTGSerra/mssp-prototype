@@ -25,19 +25,16 @@ echo "Starting Keycloak..."
 podman-compose -f $PWD/keycloak/compose.yaml up -d
 
 # Wait for Keycloak to be ready
-echo "Waiting for Keycloak to be ready..."
 MAX_RETRIES=60
 RETRY_COUNT=0
-until podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user ${KEYCLOAK_ADMIN_USERNAME} --password ${KEYCLOAK_ADMIN_PASSWORD} > /dev/null 2>&1; do
+until [[ "$(podman inspect --format='{{.State.Health.Status}}' keycloak)" == "healthy" ]] || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
     if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: Keycloak failed to start/authenticate after ${MAX_RETRIES} attempts."
+        echo "ERROR: Keycloak failed to become healthy after ${MAX_RETRIES} attempts."
         exit 1
     fi
-    echo -n "."
     sleep 5
 done
-echo "Keycloak is ready."
 
 # Configure Realm
 if podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
