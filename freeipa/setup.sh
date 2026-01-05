@@ -1,6 +1,8 @@
 #!/bin/bash
+set -e
 
-podman network create ipa
+# Criar network se não existir
+podman network exists ipa || podman network create ipa
 
 podman run --name freeipa -d \
     --network=ipa \
@@ -10,6 +12,11 @@ podman run --name freeipa -d \
     -p 88:88 -p 464:464 \
     -p 88:88/udp -p 464:464/udp \
     -p 123:123/udp \
+    --health-cmd="ipactl status || exit 1" \
+    --health-interval=30s \
+    --health-retries=5 \
+    --health-timeout=30s \
+    --health-start-period=600s \
     quay.io/freeipa/freeipa-server:rocky-9 \
     ipa-server-install -U \
     --realm=${FREEIPA_REALM} \
@@ -19,18 +26,17 @@ podman run --name freeipa -d \
 
 podman network connect waf freeipa
 
-MAX_RETRIES=60
+# Wait for FreeIPA to be ready
+MAX_RETRIES=120
 RETRY_COUNT=0
-# Wait for the configuration completion message in logs
-until podman logs freeipa 2>&1 | grep -q "FreeIPA server configured." || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+until [[ "$(podman inspect --format='{{.State.Health.Status}}' freeipa)" == "healthy" ]] || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
     RETRY_COUNT=$((RETRY_COUNT + 1))
-    sleep 10
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "ERROR: FreeIPA failed to become healthy after ${MAX_RETRIES} attempts."
+        exit 1
+    fi
+    sleep 5
 done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo "ERROR: FreeIPA failed to start/configure in time."
-    exit 1
-fi
 
 # Add system-accounts group with no password expiry
 podman exec freeipa bash -c "
