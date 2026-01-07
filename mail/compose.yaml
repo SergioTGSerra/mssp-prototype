@@ -48,7 +48,7 @@ services:
       - mailserver-state:/var/mail-state/:Z
       - mailserver-logs:/var/log/mail/:Z
       - mailserver-config:/tmp/docker-mailserver:Z
-      - ./dovecot-oauth2.conf.ext:/etc/dovecot/dovecot-oauth2.conf.ext:Z
+      - ${PWD}/mail/dovecot-oauth2.conf.ext:/etc/dovecot/dovecot-oauth2.conf.ext:Z
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
 

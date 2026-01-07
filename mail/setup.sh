@@ -55,7 +55,7 @@ else
 fi
 
 # 1. Dovecot OAuth2 Config (Host bind mount)
-cat > dovecot-oauth2.conf.ext << EOF
+cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
 introspection_url = http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
 introspection_mode = post
 client_id = ${MAILSERVER_OIDC_CLIENT_ID}
@@ -97,7 +97,7 @@ if ! podman volume exists roundcube-config; then
 fi
 
 # Create config content in a variable or temp file
-cat > config.inc.php << EOF
+cat > $PWD/mail/config.inc.php << EOF
 <?php
 \$config['db_dsnw'] = 'sqlite:////var/roundcube/db/sqlite.db';
 \$config['proxy_whitelist'] = ['*', 'localhost', '127.0.0.1'];
@@ -145,8 +145,8 @@ cat > config.inc.php << EOF
 EOF
 
 # Write to volume
-podman run --rm -i -v roundcube-config:/tmp/roundcube:Z -w /tmp/roundcube docker.io/library/busybox:latest sh -c 'cat > config.inc.php && chown 33:33 config.inc.php' < config.inc.php
-rm config.inc.php
+podman run --rm -i -v roundcube-config:/tmp/roundcube:Z -w /tmp/roundcube docker.io/library/busybox:latest sh -c 'cat > config.inc.php && chown 33:33 config.inc.php' < $PWD/mail/config.inc.php
+rm $PWD/mail/config.inc.php
 
 
 
