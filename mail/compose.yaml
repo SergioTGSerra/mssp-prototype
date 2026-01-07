@@ -1,18 +1,14 @@
 services:
   mailserver:
     image: ghcr.io/docker-mailserver/docker-mailserver:15.1.0
-    hostname: ${MAILSERVER_HOSTNAME}
     container_name: mailserver
     restart: always
     cap_add:
       - NET_ADMIN
     networks:
-      mail:
-        aliases:
-          - ${MAILSERVER_HOSTNAME}
-      keycloak: {}
-      ipa: {}
-      waf: {}
+      - mail
+      - keycloak
+      - ipa
     ports:
       - "25:25"
       - "465:465"
