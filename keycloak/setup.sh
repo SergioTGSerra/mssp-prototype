@@ -37,6 +37,10 @@ until [[ "$(podman inspect --format='{{.State.Health.Status}}' keycloak)" == "he
     sleep 5
 done
 
+# Authenticate kcadm
+echo "Authenticating Keycloak Admin..."
+podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://localhost:8080 --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+
 # Create Realm
 echo "Creating 'netzor' realm..."
 if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
