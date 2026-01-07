@@ -39,6 +39,7 @@ done
 podman run -d \
   --name bunkerweb \
   --network waf \
+  --restart=always \
   -e DNS_RESOLVERS="${WAF_DNS}" \
   -p 80:8080/tcp \
   -p 443:8443/tcp \

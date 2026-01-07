@@ -6,6 +6,7 @@ podman network exists ipa || podman network create ipa
 
 podman run --name freeipa -d \
     --network=ipa \
+    --restart=always \
     -h ${FREEIPA_HOSTNAME} --read-only \
     -v freeipa:/data:Z \
     -p 389:389 -p 636:636 \

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Add keycloak-bind system user to FreeIPA
 echo "Configuring FreeIPA Bind User..."
@@ -36,21 +37,17 @@ until [[ "$(podman inspect --format='{{.State.Health.Status}}' keycloak)" == "he
     sleep 5
 done
 
-# Configure Realm
-if podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
-    echo "Realm 'netzor' already exists."
-else
-    echo "Creating 'netzor' realm..."
-    if podman exec keycloak /opt/keycloak/bin/kcadm.sh create realms -s realm=netzor -s enabled=true; then
-        echo "Realm 'netzor' created successfully."
-    else
+# Create Realm
+echo "Creating 'netzor' realm..."
+if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/null 2>&1; then
+    podman exec keycloak /opt/keycloak/bin/kcadm.sh create realms -s realm=netzor -s enabled=true || {
         echo "ERROR: Failed to create 'netzor' realm."
         exit 1
-    fi
+    }
 fi
 
-# Configure LDAP Provider
-echo "Configuring LDAP Provider..."
+# Create LDAP Provider
+echo "Creating 'freeipa-ldap' provider..."
 if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
     -s name="freeipa-ldap" \
     -s providerId=ldap \
@@ -85,15 +82,12 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     # Check if failure is because it already exists (simplified check)
     # Ideally we would check before creating
     echo "LDAP provider might already exist or failed to create."
-else
-    echo "LDAP provider created."
-    
+else    
     # Update Mapper
     LDAP_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q name=freeipa-ldap | jq -r '.[0].id')
     MAPPER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q "name=first name" 2>/dev/null | jq -r ".[] | select(.parentId == \"${LDAP_ID}\") | .id")
     
-    if [ -n "$MAPPER_ID" ] && [ "$MAPPER_ID" != "null" ]; then
-        podman exec keycloak /opt/keycloak/bin/kcadm.sh update components/${MAPPER_ID} -r netzor -s 'config."ldap.attribute"=["givenName"]' > /dev/null 2>&1
-        echo "LDAP mapper 'first name' updated to use 'givenName'."
-    fi
+    [[ -n "$MAPPER_ID" && "$MAPPER_ID" != "null" ]] && \
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh update components/${MAPPER_ID} -r netzor -s 'config."ldap.attribute"=["givenName"]' > /dev/null 2>&1 || \
+        echo "ERROR: Failed to update LDAP mapper."
 fi
