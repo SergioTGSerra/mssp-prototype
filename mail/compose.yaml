@@ -1,6 +1,7 @@
 services:
   mailserver:
     image: ghcr.io/docker-mailserver/docker-mailserver:15.1.0
+    hostname: ${MAILSERVER_HOSTNAME}
     container_name: mailserver
     restart: always
     cap_add:
