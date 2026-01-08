@@ -56,6 +56,13 @@ fi
 
 echo ">> Starting Mail Services..."
 podman-compose -f $PWD/mail/compose.yaml up -d
+podman cp $PWD/mail/oauth2.inc.php roundcube:/var/roundcube/config/oauth2.inc.php
+podman exec roundcube bash -c "
+    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/roundcube/config/oauth2.inc.php
+    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_SECRET}/${ROUNDCUBE_OIDC_CLIENT_SECRET}/g' /var/roundcube/config/oauth2.inc.php
+    sed -i 's/\${KEYCLOAK_HOSTNAME}/${KEYCLOAK_HOSTNAME}/g' /var/roundcube/config/oauth2.inc.php
+    chown 33:33 /var/roundcube/config/oauth2.inc.php
+"
 
 # # 1. Dovecot OAuth2 Config (Host bind mount)
 # cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
