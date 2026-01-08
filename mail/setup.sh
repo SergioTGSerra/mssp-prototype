@@ -54,101 +54,106 @@ else
     echo "Roundcube client already exists."
 fi
 
-# 1. Dovecot OAuth2 Config (Host bind mount)
-cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
-introspection_url = http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
-introspection_mode = post
-client_id = ${MAILSERVER_OIDC_CLIENT_ID}
-client_secret = ${MAILSERVER_OIDC_CLIENT_SECRET}
-force_introspection = yes
-username_attribute = email
-active_attribute = active
-active_value = true
-EOF
-
-# 2. Mailserver Dovecot Config (Volume population)
-if ! podman volume exists mailserver-config; then
-    podman volume create mailserver-config > /dev/null 2>&1
-fi
-    
-podman run --rm -v mailserver-config:/tmp/docker-mailserver:Z docker.io/library/busybox:latest sh -c "cat > /tmp/docker-mailserver/dovecot.cf << EOC
-ssl = yes
-disable_plaintext_auth = no
-mail_uid = 5000
-mail_gid = 5000
-auth_mechanisms = plain login oauthbearer xoauth2
-passdb {
-  driver = oauth2
-  mechanisms = oauthbearer xoauth2
-  args = /etc/dovecot/dovecot-oauth2.conf.ext
-}
-EOC
-cat > /tmp/docker-mailserver/postfix-main.cf << EOC
-smtpd_sasl_mech_list = plain login oauthbearer xoauth2
-smtpd_sasl_security_options = noanonymous
-smtpd_sasl_type = dovecot
-smtpd_sasl_path = /dev/shm/sasl-auth.sock
-smtpd_sasl_auth_enable = yes
-EOC"
-
-# 3. Roundcube Config (Volume population)
-if ! podman volume exists roundcube-config; then
-    podman volume create roundcube-config > /dev/null 2>&1
-fi
-
-# Create config content in a variable or temp file
-cat > $PWD/mail/config.inc.php << EOF
-<?php
-\$config['db_dsnw'] = 'sqlite:////var/roundcube/db/sqlite.db';
-\$config['proxy_whitelist'] = ['*', 'localhost', '127.0.0.1'];
-\$config['use_https'] = true;
-\$config['default_host'] = '${MAILSERVER_HOSTNAME}';
-\$config['smtp_server'] = '${MAILSERVER_HOSTNAME}';
-\$config['smtp_port'] = 25;
-\$config['imap_port'] = 143;
-\$config['imap_conn_options'] = [
-  'ssl' => [
-     'verify_peer' => false,
-     'verify_peer_name' => false,
-     'allow_self_signed' => true
-   ]
-];
-\$config['smtp_conn_options'] = [
-  'ssl' => [
-     'verify_peer' => false,
-     'verify_peer_name' => false,
-     'allow_self_signed' => true
-   ]
-];
-
-\$config['plugins'] = array_filter(array_map('trim', explode(',', getenv('ROUNDCUBEMAIL_PLUGINS') ?: '')));
-
-// Debugging
-\$config['debug_level'] = 1;
-\$config['log_driver'] = 'stdout';
-\$config['imap_debug'] = true;
-\$config['smtp_debug'] = true;
-// OAuth2 Configuration - Read from Env
-\$config['oauth_provider'] = getenv('ROUNDCUBEMAIL_OAUTH_PROVIDER');
-\$config['oauth_provider_name'] = getenv('ROUNDCUBEMAIL_OAUTH_PROVIDER_NAME');
-\$config['oauth_client_id'] = getenv('ROUNDCUBEMAIL_OAUTH_CLIENT_ID');
-\$config['oauth_client_secret'] = getenv('ROUNDCUBEMAIL_OAUTH_CLIENT_SECRET');
-\$config['oauth_auth_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_AUTH_URI');
-\$config['oauth_token_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_TOKEN_URI');
-\$config['oauth_identity_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_IDENTITY_URI');
-\$config['oauth_verify_peer'] = filter_var(getenv('ROUNDCUBEMAIL_OAUTH_VERIFY_PEER'), FILTER_VALIDATE_BOOLEAN);
-\$config['oauth_scope'] = getenv('ROUNDCUBEMAIL_OAUTH_SCOPE');
-\$config['oauth_identity_fields'] = array_filter(array_map('trim', explode(',', getenv('ROUNDCUBEMAIL_OAUTH_IDENTITY_FIELDS') ?: 'email')));
-\$config['oauth_login_redirect'] = filter_var(getenv('ROUNDCUBEMAIL_OAUTH_LOGIN_REDIRECT'), FILTER_VALIDATE_BOOLEAN);
-
-
-EOF
-
-# Write to volume
-podman run --rm -i -v roundcube-config:/tmp/roundcube:Z -w /tmp/roundcube docker.io/library/busybox:latest sh -c 'cat > config.inc.php && chown 33:33 config.inc.php' < $PWD/mail/config.inc.php
-rm $PWD/mail/config.inc.php
-
-
-
 echo ">> Starting Mail Services..."
 podman-compose -f $PWD/mail/compose.yaml up -d
+
+#Update env variables in real time oauth2.inc.php and copy file to roundcube container
+podman cp $PWD/mail/oauth2.inc.php roundcube:/var/www/html/config/oauth2.inc.php
+podman exec roundcube bash -c "
+    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/www/html/config/oauth2.inc.php
+    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_SECRET}/${ROUNDCUBE_OIDC_CLIENT_SECRET}/g' /var/www/html/config/oauth2.inc.php
+    sed -i 's/\${KEYCLOAK_HOSTNAME}/${KEYCLOAK_HOSTNAME}/g' /var/www/html/config/oauth2.inc.php
+"
+
+# # 1. Dovecot OAuth2 Config (Host bind mount)
+# cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
+# introspection_url = http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
+# introspection_mode = post
+# client_id = ${MAILSERVER_OIDC_CLIENT_ID}
+# client_secret = ${MAILSERVER_OIDC_CLIENT_SECRET}
+# force_introspection = yes
+# username_attribute = email
+# active_attribute = active
+# active_value = true
+# EOF
+
+# podman run --rm -v mailserver-config:/tmp/docker-mailserver:Z docker.io/library/busybox:latest sh -c "cat > /tmp/docker-mailserver/dovecot.cf << EOC
+# ssl = yes
+# disable_plaintext_auth = no
+# mail_uid = 5000
+# mail_gid = 5000
+# auth_mechanisms = plain login oauthbearer xoauth2
+# passdb {
+#   driver = oauth2
+#   mechanisms = oauthbearer xoauth2
+#   args = /etc/dovecot/dovecot-oauth2.conf.ext
+# }
+# EOC
+# cat > /tmp/docker-mailserver/postfix-main.cf << EOC
+# smtpd_sasl_mech_list = plain login oauthbearer xoauth2
+# smtpd_sasl_security_options = noanonymous
+# smtpd_sasl_type = dovecot
+# smtpd_sasl_path = /dev/shm/sasl-auth.sock
+# smtpd_sasl_auth_enable = yes
+# EOC"
+
+# # Create config content in a variable or temp file
+# cat > $PWD/mail/config.inc.php << EOF
+# <?php
+# \$config['db_dsnw'] = 'sqlite:////var/roundcube/db/sqlite.db';
+# \$config['proxy_whitelist'] = ['*', 'localhost', '127.0.0.1'];
+# \$config['use_https'] = true;
+# \$config['default_host'] = '${MAILSERVER_HOSTNAME}';
+# \$config['smtp_server'] = '${MAILSERVER_HOSTNAME}';
+# \$config['smtp_port'] = 25;
+# \$config['imap_port'] = 143;
+# \$config['imap_conn_options'] = [
+#   'ssl' => [
+#      'verify_peer' => false,
+#      'verify_peer_name' => false,
+#      'allow_self_signed' => true
+#    ]
+# ];
+# \$config['smtp_conn_options'] = [
+#   'ssl' => [
+#      'verify_peer' => false,
+#      'verify_peer_name' => false,
+#      'allow_self_signed' => true
+#    ]
+# ];
+
+# $config['temp_dir'] = '/var/www/html/temp/';
+# $config['log_dir'] = '/var/www/html/logs/';
+# $config['drafts_mbox'] = 'Drafts';
+# $config['junk_mbox'] = 'Junk';
+# $config['sent_mbox'] = 'Sent';
+# $config['trash_mbox'] = 'Trash';
+# $config['archive_mbox'] = 'Archive';
+
+# \$config['plugins'] = array_filter(array_map('trim', explode(',', getenv('ROUNDCUBEMAIL_PLUGINS') ?: '')));
+
+# // Debugging
+# \$config['debug_level'] = 1;
+# \$config['log_driver'] = 'stdout';
+# \$config['imap_debug'] = true;
+# \$config['smtp_debug'] = true;
+# // OAuth2 Configuration - Read from Env
+# \$config['oauth_provider'] = getenv('ROUNDCUBEMAIL_OAUTH_PROVIDER');
+# \$config['oauth_provider_name'] = getenv('ROUNDCUBEMAIL_OAUTH_PROVIDER_NAME');
+# \$config['oauth_client_id'] = getenv('ROUNDCUBEMAIL_OAUTH_CLIENT_ID');
+# \$config['oauth_client_secret'] = getenv('ROUNDCUBEMAIL_OAUTH_CLIENT_SECRET');
+# \$config['oauth_auth_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_AUTH_URI');
+# \$config['oauth_token_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_TOKEN_URI');
+# \$config['oauth_identity_uri'] = getenv('ROUNDCUBEMAIL_OAUTH_IDENTITY_URI');
+# \$config['oauth_verify_peer'] = filter_var(getenv('ROUNDCUBEMAIL_OAUTH_VERIFY_PEER'), FILTER_VALIDATE_BOOLEAN);
+# \$config['oauth_scope'] = getenv('ROUNDCUBEMAIL_OAUTH_SCOPE');
+# \$config['oauth_identity_fields'] = array_filter(array_map('trim', explode(',', getenv('ROUNDCUBEMAIL_OAUTH_IDENTITY_FIELDS') ?: 'email')));
+# \$config['oauth_login_redirect'] = filter_var(getenv('ROUNDCUBEMAIL_OAUTH_LOGIN_REDIRECT'), FILTER_VALIDATE_BOOLEAN);
+
+# EOF
+
+# # Write to volume
+# podman run --rm -i -v roundcube-config:/tmp/roundcube:Z -w /tmp/roundcube docker.io/library/busybox:latest sh -c 'cat > config.inc.php && chown 33:33 config.inc.php' < $PWD/mail/config.inc.php
+
+# # Fix permissions for DB volume
+# podman run --rm -v roundcube-db:/var/roundcube/db:Z docker.io/library/busybox:latest chown -R 33:33 /var/roundcube/db

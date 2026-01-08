@@ -55,31 +55,20 @@ services:
   roundcube:
     image: docker.io/roundcube/roundcubemail:latest
     container_name: roundcube
+    hostname: ${ROUNDCUBE_HOSTNAME}
     restart: always
     networks:
       - mail
       - keycloak
       - waf
     environment:
-      - ROUNDCUBEMAIL_DB_TYPE=sqlite
       - ROUNDCUBEMAIL_DEFAULT_HOST=${MAILSERVER_HOSTNAME}
       - ROUNDCUBEMAIL_DEFAULT_PORT=143
       - ROUNDCUBEMAIL_SMTP_SERVER=${MAILSERVER_HOSTNAME}
       - ROUNDCUBEMAIL_SMTP_PORT=587
-      - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload
-      - ROUNDCUBEMAIL_OAUTH_PROVIDER=generic
-      - ROUNDCUBEMAIL_OAUTH_PROVIDER_NAME=Keycloak
-      - ROUNDCUBEMAIL_OAUTH_CLIENT_ID=${ROUNDCUBE_OIDC_CLIENT_ID}
-      - ROUNDCUBEMAIL_OAUTH_CLIENT_SECRET=${ROUNDCUBE_OIDC_CLIENT_SECRET}
-      - ROUNDCUBEMAIL_OAUTH_AUTH_URI=http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/auth
-      - ROUNDCUBEMAIL_OAUTH_TOKEN_URI=http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token
-      - ROUNDCUBEMAIL_OAUTH_IDENTITY_URI=http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo
-      - ROUNDCUBEMAIL_OAUTH_VERIFY_PEER=false
-      - ROUNDCUBEMAIL_OAUTH_SCOPE=email openid profile
-      - ROUNDCUBEMAIL_OAUTH_IDENTITY_FIELDS=email
-      - ROUNDCUBEMAIL_OAUTH_LOGIN_REDIRECT=true
     volumes:
       - roundcube-config:/var/www/html/config:Z
+      - roundcube-db:/var/roundcube/db:Z
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
@@ -102,6 +91,8 @@ volumes:
   mailserver-logs:
     name: mailserver-logs
   mailserver-config:
-    external: true
+    name: mailserver-config
   roundcube-config:
-    external: true
+    name: roundcube-config
+  roundcube-db:
+    name: roundcube-db
