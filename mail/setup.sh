@@ -57,14 +57,6 @@ fi
 echo ">> Starting Mail Services..."
 podman-compose -f $PWD/mail/compose.yaml up -d
 
-#Update env variables in real time oauth2.inc.php and copy file to roundcube container
-podman cp $PWD/mail/oauth2.inc.php roundcube:/var/www/html/config/oauth2.inc.php
-podman exec roundcube bash -c "
-    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/www/html/config/oauth2.inc.php
-    sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_SECRET}/${ROUNDCUBE_OIDC_CLIENT_SECRET}/g' /var/www/html/config/oauth2.inc.php
-    sed -i 's/\${KEYCLOAK_HOSTNAME}/${KEYCLOAK_HOSTNAME}/g' /var/www/html/config/oauth2.inc.php
-"
-
 # # 1. Dovecot OAuth2 Config (Host bind mount)
 # cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
 # introspection_url = http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect

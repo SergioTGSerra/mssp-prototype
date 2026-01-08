@@ -68,6 +68,7 @@ services:
       - ROUNDCUBEMAIL_SMTP_PORT=587
     volumes:
       - roundcube-config:/var/www/html/config:Z
+      - ${PWD}/mail/config:/var/roundcube/config:Z
       - roundcube-db:/var/roundcube/db:Z
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
