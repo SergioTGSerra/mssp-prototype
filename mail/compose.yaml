@@ -53,7 +53,7 @@ services:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
   roundcube:
-    image: docker.io/roundcube/roundcubemail:latest
+    image: docker.io/roundcube/roundcubemail:1.6.12-apache
     container_name: roundcube
     hostname: ${ROUNDCUBE_HOSTNAME}
     restart: always

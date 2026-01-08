@@ -63,6 +63,7 @@ podman exec roundcube bash -c "
     sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/www/html/config/oauth2.inc.php
     sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_SECRET}/${ROUNDCUBE_OIDC_CLIENT_SECRET}/g' /var/www/html/config/oauth2.inc.php
     sed -i 's/\${KEYCLOAK_HOSTNAME}/${KEYCLOAK_HOSTNAME}/g' /var/www/html/config/oauth2.inc.php
+    chown 33:33 /var/www/html/config/oauth2.inc.php
 "
 
 # # 1. Dovecot OAuth2 Config (Host bind mount)
@@ -153,7 +154,8 @@ podman exec roundcube bash -c "
 # EOF
 
 # # Write to volume
-# podman run --rm -i -v roundcube-config:/tmp/roundcube:Z -w /tmp/roundcube docker.io/library/busybox:latest sh -c 'cat > config.inc.php && chown 33:33 config.inc.php' < $PWD/mail/config.inc.php
+podman cp $PWD/mail/config.inc.php roundcube:/var/www/html/config/config.inc.php
+podman exec roundcube chown 33:33 /var/www/html/config/config.inc.php
 
-# # Fix permissions for DB volume
-# podman run --rm -v roundcube-db:/var/roundcube/db:Z docker.io/library/busybox:latest chown -R 33:33 /var/roundcube/db
+# Fix permissions for DB volume
+podman run --rm -v roundcube-db:/var/roundcube/db:Z docker.io/library/busybox:latest chown -R 33:33 /var/roundcube/db

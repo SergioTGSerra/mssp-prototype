@@ -1,3 +1,4 @@
+<?php
 $config['oauth_provider'] = 'generic';
 $config['oauth_provider_name'] = 'Keycloak';
 $config['oauth_client_id'] = '${ROUNDCUBE_OIDC_CLIENT_ID}';
