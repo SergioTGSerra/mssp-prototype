@@ -61,20 +61,7 @@ podman exec roundcube bash -c "
     sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/roundcube/config/oauth2.inc.php
     sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_SECRET}/${ROUNDCUBE_OIDC_CLIENT_SECRET}/g' /var/roundcube/config/oauth2.inc.php
     sed -i 's/\${KEYCLOAK_HOSTNAME}/${KEYCLOAK_HOSTNAME}/g' /var/roundcube/config/oauth2.inc.php
-    chown 33:33 /var/roundcube/config/oauth2.inc.php
 "
-
-# # 1. Dovecot OAuth2 Config (Host bind mount)
-# cat > $PWD/mail/dovecot-oauth2.conf.ext << EOF
-# introspection_url = http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
-# introspection_mode = post
-# client_id = ${MAILSERVER_OIDC_CLIENT_ID}
-# client_secret = ${MAILSERVER_OIDC_CLIENT_SECRET}
-# force_introspection = yes
-# username_attribute = email
-# active_attribute = active
-# active_value = true
-# EOF
 
 # podman run --rm -v mailserver-config:/tmp/docker-mailserver:Z docker.io/library/busybox:latest sh -c "cat > /tmp/docker-mailserver/dovecot.cf << EOC
 # ssl = yes
