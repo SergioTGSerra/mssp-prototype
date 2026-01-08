@@ -43,7 +43,7 @@ services:
       - ENABLE_RSPAMD=1
       - ENABLE_CLAMAV=1
       - ENABLE_FAIL2BAN=1
-      - DOVECOT_USER_ATTRS=uidNumber=uid,gidNumber=gid
+      - DOVECOT_USER_ATTRS==uid=5000,=gid=5000,=home=/var/mail/%d/%n,=mail=maildir:/var/mail/%d/%n
     volumes:
       - mailserver-data:/var/mail:Z
       - mailserver-state:/var/mail-state/:Z
