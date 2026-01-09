@@ -27,9 +27,10 @@ podman run --name freeipa -d \
     --admin-password=${FREEIPA_ADMIN_PASSWORD} \
     --ds-password=${FREEIPA_DS_PASSWORD} \
     --no-ntp 
-fi
 
 podman network connect waf freeipa
+
+fi
 
 # Wait for FreeIPA to be ready
 MAX_RETRIES=120
