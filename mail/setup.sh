@@ -56,6 +56,16 @@ fi
 
 echo ">> Starting Mail Services..."
 podman-compose -f $PWD/mail/compose.yaml up -d
+
+# Add client_id & client_secret to dovecot-oauth2.conf.ext
+podman exec mailserver bash -c "
+cat >> /etc/dovecot/dovecot-oauth2.conf.ext << EOF
+client_id = ${MAILSERVER_OIDC_CLIENT_ID}
+client_secret = ${MAILSERVER_OIDC_CLIENT_SECRET}
+EOF
+"
+
+# Add client_id & client_secret to roundcube/oauth2.inc.php
 podman cp $PWD/mail/oauth2.inc.php roundcube:/var/roundcube/config/oauth2.inc.php
 podman exec roundcube bash -c "
     sed -i 's/\${ROUNDCUBE_OIDC_CLIENT_ID}/${ROUNDCUBE_OIDC_CLIENT_ID}/g' /var/roundcube/config/oauth2.inc.php
