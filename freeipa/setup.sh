@@ -4,6 +4,9 @@ set -e
 # Criar network se não existir
 podman network exists ipa || podman network create ipa
 
+if podman container exists freeipa; then
+  podman start freeipa
+else
 podman run --name freeipa -d \
     --network=ipa \
     --restart=always \
@@ -24,6 +27,7 @@ podman run --name freeipa -d \
     --admin-password=${FREEIPA_ADMIN_PASSWORD} \
     --ds-password=${FREEIPA_DS_PASSWORD} \
     --no-ntp 
+fi
 
 podman network connect waf freeipa
 

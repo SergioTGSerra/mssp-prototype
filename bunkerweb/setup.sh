@@ -36,21 +36,25 @@ for SERVICE in "${SERVICES[@]}"; do
   )
 done
 
-podman run -d \
-  --name bunkerweb \
-  --network waf \
-  --restart=always \
-  -e DNS_RESOLVERS="${WAF_DNS}" \
-  -p 80:8080/tcp \
-  -p 443:8443/tcp \
-  -p 443:8443/udp \
-  -v bunkerweb:/data:Z \
-  -e ADMIN_USERNAME="${BUNKERWEB_ADMIN_USERNAME}" \
-  -e ADMIN_PASSWORD="${BUNKERWEB_ADMIN_PASSWORD}" \
-  -e USE_CROWDSEC=yes \
-  -e USE_WHITELIST=yes \
-  -e WHITELIST_COUNTRY="PT" \
-  -e MULTISITE=yes \
-  -e SERVER_NAME="${SERVER_NAMES[*]}" \
-  "${BUNKER_ENV[@]}" \
-  docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
+if podman container exists bunkerweb; then
+  podman start bunkerweb
+else
+  podman run -d \
+    --name bunkerweb \
+    --network waf \
+    --restart=always \
+    -e DNS_RESOLVERS="${WAF_DNS}" \
+    -p 80:8080/tcp \
+    -p 443:8443/tcp \
+    -p 443:8443/udp \
+    -v bunkerweb:/data:Z \
+    -e ADMIN_USERNAME="${BUNKERWEB_ADMIN_USERNAME}" \
+    -e ADMIN_PASSWORD="${BUNKERWEB_ADMIN_PASSWORD}" \
+    -e USE_CROWDSEC=yes \
+    -e USE_WHITELIST=yes \
+    -e WHITELIST_COUNTRY="PT" \
+    -e MULTISITE=yes \
+    -e SERVER_NAME="${SERVER_NAMES[*]}" \
+    "${BUNKER_ENV[@]}" \
+    docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
+fi
