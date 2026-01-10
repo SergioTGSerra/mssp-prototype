@@ -11,7 +11,7 @@ SERVICES=(
   "${FREEIPA_HOSTNAME}=https://freeipa"
   "${KEYCLOAK_HOSTNAME}=http://keycloak:8080"
   "${ROUNDCUBE_HOSTNAME}=http://roundcube"
-  "${NEXTCLOUD_HOSTNAME}=http://nextcloud-web"
+  "${NEXTCLOUD_HOSTNAME}=http://nextcloud-nginx"
   "${GLPI_HOSTNAME}=http://glpi"
   "${IRIS_HOSTNAME}=https://iriswebapp_nginx:8443"
   "${N8N_HOSTNAME}=http://n8n_app:5678"
@@ -56,5 +56,5 @@ else
     -e MULTISITE=yes \
     -e SERVER_NAME="${SERVER_NAMES[*]}" \
     "${BUNKER_ENV[@]}" \
-    docker.io/bunkerity/bunkerweb-all-in-one:1.6.6
+    docker.io/bunkerity/bunkerweb-all-in-one:1.6.7
 fi
