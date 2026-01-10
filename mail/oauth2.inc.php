@@ -1,4 +1,8 @@
 <?php
+// Usa HTTPS nos URLs gerados (necessário quando atrás de reverse proxy)
+// use_https diz ao Roundcube para gerar URLs HTTPS sem causar redirect loop
+$config['use_https'] = true;
+
 $config['oauth_provider'] = 'generic';
 $config['oauth_provider_name'] = 'Keycloak';
 $config['oauth_client_id'] = '${ROUNDCUBE_OIDC_CLIENT_ID}';
