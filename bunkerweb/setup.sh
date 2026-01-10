@@ -33,6 +33,7 @@ for SERVICE in "${SERVICES[@]}"; do
     -e "${HOST}_USE_REVERSE_PROXY=yes"
     -e "${HOST}_REVERSE_PROXY_HOST=${BACKEND}"
     -e "${HOST}_SECURITY_MODE=detect"
+    -e "${HOST}_REDIRECT_HTTP_TO_HTTPS=yes"
   )
 done
 

@@ -72,6 +72,6 @@ podman exec -u www-data nextcloud php occ config:app:set user_oidc httpclient.al
 podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
     --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-    --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration"
+    --discoveryuri="https://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration"
 
 echo ">> Nextcloud OIDC configuration complete."
