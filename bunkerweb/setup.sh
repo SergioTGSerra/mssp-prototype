@@ -58,6 +58,7 @@ else
     -e USE_CROWDSEC=yes \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
+    -e WHITELIST_IP="10.0.0.0/8" \
     -e MULTISITE=yes \
     -e SERVER_NAME="${SERVER_NAMES[*]}" \
     "${BUNKER_ENV[@]}" \
