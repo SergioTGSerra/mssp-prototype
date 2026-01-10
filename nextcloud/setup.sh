@@ -49,7 +49,7 @@ else
         -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\"]" \
         -s publicClient=false \
         -s protocol=openid-connect \
-        -s 'defaultClientScopes=["openid", "profile", "email"]' \
+        -s 'defaultClientScopes=["profile", "openid", "email"]' \
         > /dev/null 2>&1; then
         echo "Nextcloud OIDC client created successfully."
     else

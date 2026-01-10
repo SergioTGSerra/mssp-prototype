@@ -50,6 +50,7 @@ services:
       - nextcloud-postgres
       - nextcloud-redis
     extra_hosts:
+      - "${KEYCLOAK_HOSTNAME}:host-gateway"
       - "${ROUNDCUBE_HOSTNAME}:host-gateway"
 
   nextcloud-nginx:
