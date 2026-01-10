@@ -35,6 +35,10 @@ for SERVICE in "${SERVICES[@]}"; do
     -e "${HOST}_SECURITY_MODE=detect"
     -e "${HOST}_REDIRECT_HTTP_TO_HTTPS=yes"
   )
+
+  if [[ "$HOST" == "$KEYCLOAK_HOSTNAME" ]]; then
+    BUNKER_ENV+=(-e "${HOST}_COOKIE_FLAGS=")
+  fi
 done
 
 if podman container exists bunkerweb; then
