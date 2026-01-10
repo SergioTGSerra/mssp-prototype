@@ -1,7 +1,7 @@
 services:
-  postgres:
-    image: docker.io/library/postgres:17-alpine
-    container_name: postgres
+  nextcloud-postgres:
+    image: docker.io/library/postgres:18-alpine
+    container_name: nextcloud-postgres
     networks:
       - nextcloud-network
     environment:
@@ -14,9 +14,9 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${NEXTCLOUD_DB_USER}", "-d", "${NEXTCLOUD_DB_NAME}"]
 
-  redis:
+  nextcloud-redis:
     image: docker.io/library/redis:8.4-alpine
-    container_name: redis
+    container_name: nextcloud-redis
     networks:
       - nextcloud-network
     volumes:
@@ -26,17 +26,17 @@ services:
       test: ["CMD", "redis-cli", "ping"]
 
   nextcloud:
-    image: docker.io/library/nextcloud:production-fpm-alpine
+    image: docker.io/library/nextcloud:32-fpm-alpine
     container_name: nextcloud
     networks:
       - nextcloud-network
       - mail
     environment:
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: nextcloud-postgres
       POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
       POSTGRES_USER: ${NEXTCLOUD_DB_USER}
       POSTGRES_PASSWORD: ${NEXTCLOUD_DB_PASSWORD}
-      REDIS_HOST: redis
+      REDIS_HOST: nextcloud-redis
       NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
       NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
       NEXTCLOUD_TRUSTED_DOMAINS: "${NEXTCLOUD_HOSTNAME}"
@@ -48,12 +48,12 @@ services:
       - nextcloud-config-data:/var/www/html/config:Z
     restart: always
     depends_on:
-      - postgres
-      - redis
+      - nextcloud-postgres
+      - nextcloud-redis
 
-  nginx:
-    image: docker.io/library/nginx:alpine
-    container_name: nginx
+  nextcloud-nginx:
+    image: docker.io/library/nginx:1.29-alpine
+    container_name: nextcloud-nginx
     networks:
       - nextcloud-network
       - waf
