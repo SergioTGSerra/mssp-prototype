@@ -30,6 +30,7 @@ services:
     container_name: nextcloud
     networks:
       - nextcloud
+      - mail
     environment:
       POSTGRES_HOST: postgres-nextcloud
       POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
@@ -68,6 +69,8 @@ networks:
     name: nextcloud
     driver: bridge
   waf:
+    external: true
+  mail:
     external: true
 
 volumes:
