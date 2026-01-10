@@ -15,7 +15,7 @@ $config['oauth_identity_uri'] = 'https://${KEYCLOAK_HOSTNAME}/realms/netzor/prot
 // http://docs.guzzlephp.org/en/stable/request-options.html#verify
 $config['oauth_verify_peer'] = false;
 
-$config['oauth_scope'] = 'email openid profile';
+$config['oauth_scope'] = 'email profile';
 $config['oauth_identity_fields'] = ['email'];
 
 // Boolean: automatically redirect to OAuth login when opening Roundcube without a valid session
