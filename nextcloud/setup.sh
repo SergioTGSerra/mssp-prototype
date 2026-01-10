@@ -32,7 +32,7 @@ fi
 echo ">> Configuring Nextcloud apps..."
 podman exec -u www-data nextcloud php occ app:disable firstrunwizard
 podman exec -u www-data nextcloud php occ app:install calendar || podman exec -u www-data nextcloud php occ app:enable calendar
-podman exec -u www-data nextcloud php occ app:install mail || podman exec -u www-data nextcloud php occ app:enable mail
+podman exec -u www-data nextcloud php occ app:install mail_roundcube || podman exec -u www-data nextcloud php occ app:enable mail_roundcube
 podman exec -u www-data nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud php occ app:enable user_oidc
 
 # Create Nextcloud OIDC client
@@ -57,12 +57,17 @@ else
     fi
 fi
 
+# Set skeleton directory to empty string
+podman exec -u www-data nextcloud php occ config:system:set skeletondirectory --value=''
+# Set allow_multiple_user_backends to false
+podman exec -u www-data nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
+# Set external location for Roundcube
+podman exec -u www-data nextcloud php occ config:app:set mail_roundcube externalLocation --value="https://${ROUNDCUBE_HOSTNAME}"
+
 # Configure OIDC provider (Keycloak)
 echo ">> Configuring Keycloak OIDC provider..."
 podman exec -u www-data nextcloud php occ config:system:set allow_local_remote_servers --value=true --type=boolean
 podman exec -u www-data nextcloud php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
-podman exec -u www-data nextcloud php occ config:system:set skeletondirectory --value=''
-podman exec -u www-data nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 
 podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \

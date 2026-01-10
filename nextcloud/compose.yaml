@@ -50,6 +50,8 @@ services:
     depends_on:
       - nextcloud-postgres
       - nextcloud-redis
+    extra_hosts:
+      - "${ROUNDCUBE_HOSTNAME}:host-gateway"
 
   nextcloud-nginx:
     image: docker.io/library/nginx:1.29-alpine
