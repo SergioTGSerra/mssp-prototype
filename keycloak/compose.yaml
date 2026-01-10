@@ -34,7 +34,6 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_HOSTNAME: https://${KEYCLOAK_HOSTNAME}
       KC_PROXY_HEADERS: xforwarded
-      KC_HOSTNAME_DEBUG: "true"
       KC_HTTP_ENABLED: "true"
     healthcheck:
       test: ["CMD-SHELL", "/bin/bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /realms/master HTTP/1.1\\r\\nHost: localhost:8080\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q \"200 OK\"'"]
