@@ -7,8 +7,8 @@ services:
     cap_add:
       - NET_ADMIN
     networks:
-      - mail
-      - keycloak
+      - mail-network
+      - keycloak-network
       - ipa
     ports:
       - "25:25"
@@ -40,9 +40,9 @@ services:
       - DOVECOT_USER_ATTRS==uid=5000,=gid=5000,=home=/var/mail/%d/%n,=mail=maildir:/var/mail/%d/%n
     volumes:
       - mailserver-data:/var/mail:Z
-      - mailserver-state:/var/mail-state/:Z
-      - mailserver-logs:/var/log/mail/:Z
-      - mailserver-config:/tmp/docker-mailserver:Z
+      - mailserver-state-data:/var/mail-state/:Z
+      - mailserver-logs-data:/var/log/mail/:Z
+      - mailserver-config-data:/tmp/docker-mailserver:Z
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
@@ -52,8 +52,8 @@ services:
     hostname: ${ROUNDCUBE_HOSTNAME}
     restart: always
     networks:
-      - mail
-      - keycloak
+      - mail-network
+      - keycloak-network
       - waf
     environment:
       - ROUNDCUBEMAIL_DEFAULT_HOST=${MAILSERVER_HOSTNAME}
@@ -61,16 +61,16 @@ services:
       - ROUNDCUBEMAIL_SMTP_SERVER=${MAILSERVER_HOSTNAME}
       - ROUNDCUBEMAIL_SMTP_PORT=587
     volumes:
-      - roundcube-config:/var/www/html/config:Z
-      - roundcube-db:/var/roundcube/db:Z
+      - roundcube-config-data:/var/www/html/config:Z
+      - roundcube-db-data:/var/roundcube/db:Z
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
 networks:
-  mail:
+  mail-network:
     driver: bridge
-    name: mail
-  keycloak:
+    name: mail-network
+  keycloak-network:
     external: true
   ipa:
     external: true
@@ -80,13 +80,13 @@ networks:
 volumes:
   mailserver-data:
     name: mailserver-data
-  mailserver-state:
-    name: mailserver-state
-  mailserver-logs:
-    name: mailserver-logs
-  mailserver-config:
-    name: mailserver-config
-  roundcube-config:
-    name: roundcube-config
-  roundcube-db:
-    name: roundcube-db
+  mailserver-state-data:
+    name: mailserver-state-data
+  mailserver-logs-data:
+    name: mailserver-logs-data
+  mailserver-config-data:
+    name: mailserver-config-data
+  roundcube-config-data:
+    name: roundcube-config-data
+  roundcube-db-data:
+    name: roundcube-db-data
