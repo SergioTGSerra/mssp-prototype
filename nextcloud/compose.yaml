@@ -25,9 +25,9 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
 
-  nextcloud-app:
+  nextcloud:
     image: docker.io/library/nextcloud:production-fpm-alpine
-    container_name: nextcloud-app
+    container_name: nextcloud
     networks:
       - nextcloud
     environment:
@@ -61,7 +61,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro,Z
     restart: always
     depends_on:
-      - nextcloud-app
+      - nextcloud
 
 networks:
   nextcloud:
