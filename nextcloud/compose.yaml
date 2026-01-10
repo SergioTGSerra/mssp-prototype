@@ -26,7 +26,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
 
   nextcloud:
-    image: docker.io/library/nextcloud:32-fpm-alpine
+    image: docker.io/library/nextcloud:31.0.12-fpm-alpine
     container_name: nextcloud
     networks:
       - nextcloud-network
