@@ -62,6 +62,7 @@ podman exec mailserver bash -c "
 cat >> /etc/dovecot/dovecot-oauth2.conf.ext << EOF
 client_id = ${MAILSERVER_OIDC_CLIENT_ID}
 client_secret = ${MAILSERVER_OIDC_CLIENT_SECRET}
+tls_allow_invalid_cert = yes
 EOF
 "
 
