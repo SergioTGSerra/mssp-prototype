@@ -61,6 +61,8 @@ fi
 echo ">> Configuring Keycloak OIDC provider..."
 podman exec -u www-data nextcloud php occ config:system:set allow_local_remote_servers --value=true --type=boolean
 podman exec -u www-data nextcloud php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
+podman exec -u www-data nextcloud php occ config:system:set skeletondirectory --value=''
+podman exec -u www-data nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 
 podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
