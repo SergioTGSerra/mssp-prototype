@@ -12,7 +12,10 @@ services:
       - nextcloud-postgres-data:/var/lib/postgresql/data:Z
     restart: always
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${NEXTCLOUD_DB_USER}", "-d", "${NEXTCLOUD_DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${NEXTCLOUD_DB_USER} -d ${NEXTCLOUD_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   nextcloud-redis:
     image: docker.io/library/redis:8.4-alpine
@@ -30,6 +33,7 @@ services:
     container_name: nextcloud
     networks:
       - nextcloud-network
+      - keycloak-network
     environment:
       POSTGRES_HOST: nextcloud-postgres
       POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
@@ -50,7 +54,6 @@ services:
       - nextcloud-postgres
       - nextcloud-redis
     extra_hosts:
-      - "${KEYCLOAK_HOSTNAME}:host-gateway"
       - "${ROUNDCUBE_HOSTNAME}:host-gateway"
 
   nextcloud-nginx:
@@ -70,6 +73,8 @@ networks:
   nextcloud-network:
     name: nextcloud-network
     driver: bridge
+  keycloak-network:
+    external: true
   waf:
     external: true
 
