@@ -32,7 +32,7 @@ fi
 echo ">> Configuring Nextcloud apps..."
 podman exec -u www-data nextcloud php occ app:disable firstrunwizard
 podman exec -u www-data nextcloud php occ app:install calendar || podman exec -u www-data nextcloud php occ app:enable calendar
-podman exec -u www-data nextcloud php occ app:install mail_roundcube || podman exec -u www-data nextcloud php occ app:enable mail_roundcube
+podman exec -u www-data nextcloud php occ app:install mail || podman exec -u www-data nextcloud php occ app:enable mail
 podman exec -u www-data nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud php occ app:enable user_oidc
 
 # Create Nextcloud OIDC client
@@ -61,8 +61,6 @@ fi
 podman exec -u www-data nextcloud php occ config:system:set skeletondirectory --value=''
 # Set allow_multiple_user_backends to false
 podman exec -u www-data nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
-# Set external location for Roundcube
-podman exec -u www-data nextcloud php occ config:app:set mail_roundcube externalLocation --value="https://${ROUNDCUBE_HOSTNAME}"
 
 # Configure OIDC provider (Keycloak)
 echo ">> Configuring Keycloak OIDC provider..."
@@ -72,6 +70,6 @@ podman exec -u www-data nextcloud php occ config:app:set user_oidc httpclient.al
 podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
     --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-    --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration"
+    --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration" 
 
 echo ">> Nextcloud OIDC configuration complete."
