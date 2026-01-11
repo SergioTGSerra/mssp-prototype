@@ -30,7 +30,7 @@ services:
       - DOVECOT_USER_FILTER=(&(objectClass=inetOrgPerson)(uid=%n)(!(|(uid=admin)(memberOf=cn=system-accounts,${FREEIPA_GROUP_DN}))))
       - DOVECOT_AUTH_BIND=yes
       - ENABLE_OAUTH2=1
-      - OAUTH2_INTROSPECTION_URL=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
+      - OAUTH2_INTROSPECTION_URL=http://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token/introspect
       - OAUTH2_INTROSPECTION_MODE=post
       - OAUTH2_USERNAME_ATTRIBUTE=email
       - POSTMASTER_ADDRESS=postmaster@${DOMAIN}
