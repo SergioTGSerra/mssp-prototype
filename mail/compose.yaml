@@ -63,9 +63,7 @@ services:
     volumes:
       - roundcube-config-data:/var/www/html/config:Z
       - roundcube-db-data:/var/roundcube/db:Z
-    extra_hosts:
-      - "${KEYCLOAK_HOSTNAME}:host-gateway"
-
+      
 networks:
   mail-network:
     driver: bridge

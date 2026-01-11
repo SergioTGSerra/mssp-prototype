@@ -45,8 +45,8 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q cl
         -s enabled=true \
         -s clientAuthenticatorType=client-secret \
         -s secret="${ROUNDCUBE_OIDC_CLIENT_SECRET}" \
-        -s "redirectUris=[\"https://${ROUNDCUBE_HOSTNAME}/*\"]" \
-        -s "webOrigins=[\"https://${ROUNDCUBE_HOSTNAME}\"]" \
+        -s "redirectUris=[\"https://${ROUNDCUBE_HOSTNAME}/*\", \"http://${ROUNDCUBE_HOSTNAME}/*\"]" \
+        -s "webOrigins=[\"https://${ROUNDCUBE_HOSTNAME}\", \"http://${ROUNDCUBE_HOSTNAME}\"]" \
         -s publicClient=false \
         -s protocol=openid-connect \
         -s 'defaultClientScopes=["openid", "profile", "email"]' > /dev/null 2>&1
