@@ -45,8 +45,8 @@ else
         -s enabled=true \
         -s clientAuthenticatorType=client-secret \
         -s secret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-        -s "redirectUris=[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
-        -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\"]" \
+        -s "redirectUris=[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
+        -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
         -s publicClient=false \
         -s protocol=openid-connect \
         -s 'defaultClientScopes=["profile", "openid", "email"]' \
