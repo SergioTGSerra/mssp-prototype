@@ -47,7 +47,7 @@ services:
       NEXTCLOUD_TRUSTED_DOMAINS: "${NEXTCLOUD_HOSTNAME}"
       TRUSTED_PROXIES: "192.168.0.0/16 172.16.0.0/12 10.0.0.0/8"
       OVERWRITEHOST: ${NEXTCLOUD_HOSTNAME}
-      OVERWRITEPROTOCOL: https
+      #OVERWRITEPROTOCOL: https
     volumes:
       - nextcloud-data:/var/www/html:Z
       - nextcloud-config-data:/var/www/html/config:Z
