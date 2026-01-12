@@ -1,6 +1,6 @@
 services:
   nextcloud-postgres:
-    image: docker.io/library/postgres:18-alpine
+    image: docker.io/library/postgres:17-alpine
     container_name: nextcloud-postgres
     networks:
       - nextcloud-network
@@ -29,12 +29,13 @@ services:
       test: ["CMD", "redis-cli", "ping"]
 
   nextcloud:
-    image: docker.io/library/nextcloud:31.0.12-fpm-alpine
+    image: docker.io/library/nextcloud:31.0.12-apache
     container_name: nextcloud
     networks:
       - nextcloud-network
       - keycloak-network
       - mail-network
+      - waf
     environment:
       POSTGRES_HOST: nextcloud-postgres
       POSTGRES_DB: ${NEXTCLOUD_DB_NAME}
@@ -56,19 +57,6 @@ services:
       - nextcloud-redis
     extra_hosts:
       - "${ROUNDCUBE_HOSTNAME}:host-gateway"
-
-  nextcloud-nginx:
-    image: docker.io/library/nginx:1.29-alpine
-    container_name: nextcloud-nginx
-    networks:
-      - nextcloud-network
-      - waf
-    volumes:
-      - nextcloud-data:/var/www/html:Z
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro,Z
-    restart: always
-    depends_on:
-      - nextcloud
 
 networks:
   nextcloud-network:
