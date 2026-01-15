@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+    <id>mail_oidc_bridge</id>
+    <name>Mail OIDC Bridge</name>
+    <summary>Bridges user_oidc tokens with Mail app for XOAUTH2 authentication</summary>
+    <description><![CDATA[
+Allows the Nextcloud Mail app to use OIDC tokens from user_oidc for XOAUTH2 authentication with mail servers.
+
+This app listens to BeforeImapClientCreated events and injects the OIDC access token into mail accounts configured with xoauth2 authentication method.
+
+Requirements:
+- user_oidc app with store_login_token enabled
+- Mail app with accounts configured for xoauth2
+- Mail server supporting OAuth2 authentication
+    ]]></description>
+    <version>1.0.0</version>
+    <licence>agpl</licence>
+    <author>Sergio Serra</author>
+    <namespace>MailOidcBridge</namespace>
+    <category>integration</category>
+    <dependencies>
+        <nextcloud min-version="28" max-version="31"/>
+    </dependencies>
+</info>
