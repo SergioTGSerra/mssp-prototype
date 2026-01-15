@@ -72,4 +72,29 @@ podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
     --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
     --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration" 
 
-echo ">> Nextcloud OIDC configuration complete."
+# Enable store_login_token for OIDC tokens
+podman exec -u www-data nextcloud php occ config:app:set user_oidc store_login_token --value=1
+
+# Install mail_oidc_bridge app
+echo ">> Installing mail_oidc_bridge app..."
+podman cp $PWD/nextcloud/apps/mail_oidc_bridge nextcloud:/var/www/html/custom_apps/
+podman exec nextcloud chown -R www-data:www-data /var/www/html/custom_apps/mail_oidc_bridge
+podman exec -u www-data nextcloud php occ app:enable mail_oidc_bridge
+
+# Configure Mail provisioning (auto-creates mail accounts for users)
+echo ">> Configuring Mail provisioning..."
+podman exec nextcloud-postgres psql -U nextcloud -d nextcloud -c "
+INSERT INTO oc_mail_provisionings (
+    provisioning_domain, email_template, 
+    imap_user, imap_host, imap_port, imap_ssl_mode,
+    smtp_user, smtp_host, smtp_port, smtp_ssl_mode,
+    sieve_enabled, ldap_aliases_provisioning, master_password_enabled
+) VALUES (
+    'netzor.pt', '%EMAIL%',
+    '%EMAIL%', '${MAILSERVER_HOSTNAME}', 143, 'none',
+    '%EMAIL%', '${MAILSERVER_HOSTNAME}', 587, 'none',
+    false, false, false
+) ON CONFLICT DO NOTHING;
+"
+
+echo ">> Nextcloud OIDC and Mail configuration complete."

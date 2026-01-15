@@ -5,14 +5,17 @@
     <name>Mail OIDC Bridge</name>
     <summary>Bridges user_oidc tokens with Mail app for XOAUTH2 authentication</summary>
     <description><![CDATA[
-Allows the Nextcloud Mail app to use OIDC tokens from user_oidc for XOAUTH2 authentication with mail servers.
+Bridges user_oidc tokens with Mail app for XOAUTH2 authentication.
 
-This app listens to BeforeImapClientCreated events and injects the OIDC access token into mail accounts configured with xoauth2 authentication method.
+Features:
+- Updates Mail provisioned accounts to use XOAUTH2 for OIDC users
+- Injects OIDC access tokens into mail accounts for XOAUTH2 authentication
+- Works with Mail app's native provisioning (Admin Settings > Groupware)
 
 Requirements:
 - user_oidc app with store_login_token enabled
-- Mail app with accounts configured for xoauth2
-- Mail server supporting OAuth2 authentication
+- Mail app installed with provisioning configured
+- Mail server supporting OAuth2 authentication (XOAUTH2)
     ]]></description>
     <version>1.0.0</version>
     <licence>agpl</licence>
