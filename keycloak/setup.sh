@@ -68,7 +68,7 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor
     -s 'config.rdnLDAPAttribute=["uid"]' \
     -s 'config.uuidLDAPAttribute=["ipaUniqueID"]' \
     -s 'config.userObjectClasses=["inetOrgPerson, organizationalPerson"]' \
-    -s "config.connectionUrl=[\"ldap://freeipa\"]" \
+    -s "config.connectionUrl=[\"ldap://${FREEIPA_HOSTNAME}\"]" \
     -s "config.usersDn=[\"${FREEIPA_USER_DN}\"]" \
     -s 'config.authType=["simple"]' \
     -s "config.bindDn=[\"${KEYCLOAK_LDAP_BIND_DN}\"]" \
