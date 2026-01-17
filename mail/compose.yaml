@@ -18,7 +18,7 @@ services:
       - "143:143"
     environment:
       - ACCOUNT_PROVISIONER=LDAP
-      - LDAP_SERVER_HOST=ldap://freeipa
+      - LDAP_SERVER_HOST=ldap://${FREEIPA_HOSTNAME}
       - LDAP_SEARCH_BASE=cn=accounts,${FREEIPA_BASE_DN}
       - LDAP_BIND_DN=${MAILSERVER_LDAP_BIND_DN}
       - LDAP_BIND_PW=${MAILSERVER_LDAP_BIND_PASSWORD}
@@ -56,9 +56,9 @@ services:
       - keycloak-network
       - waf
     environment:
-      - ROUNDCUBEMAIL_DEFAULT_HOST=mailserver
+      - ROUNDCUBEMAIL_DEFAULT_HOST=${MAILSERVER_HOSTNAME}
       - ROUNDCUBEMAIL_DEFAULT_PORT=143
-      - ROUNDCUBEMAIL_SMTP_SERVER=mailserver
+      - ROUNDCUBEMAIL_SMTP_SERVER=${MAILSERVER_HOSTNAME}
       - ROUNDCUBEMAIL_SMTP_PORT=587
     volumes:
       - roundcube-config-data:/var/www/html/config:Z
