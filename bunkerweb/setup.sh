@@ -11,7 +11,7 @@ SERVICES=(
   "${FREEIPA_HOSTNAME}=https://freeipa"
   "${KEYCLOAK_HOSTNAME}=http://keycloak"
   "${ROUNDCUBE_HOSTNAME}=http://roundcube"
-  "${NEXTCLOUD_HOSTNAME}=http://nextcloud"
+  "${NEXTCLOUD_HOSTNAME}=http://nextcloud-aio-apache:11000"
   "${GLPI_HOSTNAME}=http://glpi"
   "${IRIS_HOSTNAME}=https://iriswebapp_nginx:8443"
   "${N8N_HOSTNAME}=http://n8n_app:5678"
@@ -46,6 +46,7 @@ else
   podman run -d \
     --name bunkerweb \
     --network waf \
+    -h ${BUNKERWEB_HOSTNAME} \
     --restart=always \
     -e DNS_RESOLVERS="${WAF_DNS}" \
     -p 80:8080/tcp \
@@ -54,7 +55,7 @@ else
     -v bunkerweb:/data:Z \
     -e ADMIN_USERNAME="${BUNKERWEB_ADMIN_USERNAME}" \
     -e ADMIN_PASSWORD="${BUNKERWEB_ADMIN_PASSWORD}" \
-    -e USE_CROWDSEC=yes \
+    -e USE_CROWDSEC=no \
     -e USE_WHITELIST=yes \
     -e WHITELIST_COUNTRY="PT" \
     -e WHITELIST_IP="10.0.0.0/8" \
