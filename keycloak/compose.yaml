@@ -1,6 +1,6 @@
 services:
   keycloak-postgres:
-    image: docker.io/library/postgres:18-alpine
+    image: docker.io/library/postgres:18
     container_name: keycloak-postgres
     restart: always
     environment:
