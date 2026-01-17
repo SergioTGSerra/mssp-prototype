@@ -35,8 +35,23 @@ for SERVICE in "${SERVICES[@]}"; do
     -e "${HOST}_SECURITY_MODE=detect"
   )
 
-  if [[ "$HOST" == "$KEYCLOAK_HOSTNAME" ]]; then
+  # Desativar modificação de cookies para aplicações que gerem os seus próprios cookies
+  if [[ "$HOST" == "$KEYCLOAK_HOSTNAME" ]] || [[ "$HOST" == "$NEXTCLOUD_HOSTNAME" ]]; then
     BUNKER_ENV+=(-e "${HOST}_COOKIE_FLAGS=")
+  fi
+
+  # Configurações específicas para Nextcloud
+  if [[ "$HOST" == "$NEXTCLOUD_HOSTNAME" ]]; then
+    BUNKER_ENV+=(
+      -e "${HOST}_REVERSE_PROXY_WS=yes"
+      -e "${HOST}_REVERSE_PROXY_INTERCEPT_ERRORS=no"
+      -e "${HOST}_REVERSE_PROXY_CONNECT_TIMEOUT=300s"
+      -e "${HOST}_REVERSE_PROXY_READ_TIMEOUT=300s"
+      -e "${HOST}_REVERSE_PROXY_SEND_TIMEOUT=300s"
+      -e "${HOST}_MAX_CLIENT_SIZE=16G"
+      -e "${HOST}_CLIENT_BODY_TIMEOUT=300s"
+      -e "${HOST}_PROXY_BUFFERING=no"
+    )
   fi
 done
 
