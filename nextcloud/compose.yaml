@@ -87,6 +87,9 @@ services:
     expose:
       - "9000"
       - "9001"
+    networks:
+      - default
+      - mail-network
     volumes:
       - nextcloud_aio_nextcloud:/var/www/html:rw
       - ${NEXTCLOUD_DATADIR}:/mnt/ncdata:rw
@@ -479,4 +482,6 @@ networks:
   default:
     driver: bridge
   waf:
+    external: true
+  mail-network:
     external: true
