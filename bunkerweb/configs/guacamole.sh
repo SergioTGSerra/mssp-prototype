@@ -1,0 +1,8 @@
+HOST=$GUACAMOLE_HOSTNAME
+SERVER_NAMES+=("$HOST")
+
+BUNKER_ENV+=(
+    -e "${HOST}_USE_REVERSE_PROXY=yes"
+    -e "${HOST}_REVERSE_PROXY_HOST=http://guacamole:8080"
+    -e "${HOST}_SECURITY_MODE=detect"
+)

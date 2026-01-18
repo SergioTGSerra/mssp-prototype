@@ -6,52 +6,19 @@ podman network exists waf || podman network create waf
 
 WAF_DNS=$(podman network inspect waf --format '{{(index .Subnets 0).Gateway}}')
 
-# Lista de serviços: HOSTNAME=BACKEND_URL
-SERVICES=(
-  "${FREEIPA_HOSTNAME}=https://freeipa"
-  "${KEYCLOAK_HOSTNAME}=http://keycloak"
-  "${ROUNDCUBE_HOSTNAME}=http://roundcube"
-  "${NEXTCLOUD_HOSTNAME}=http://nextcloud-aio-apache:11000"
-  "${GLPI_HOSTNAME}=http://glpi"
-  "${IRIS_HOSTNAME}=https://iriswebapp_nginx:8443"
-  "${N8N_HOSTNAME}=http://n8n_app:5678"
-  "${GUACAMOLE_HOSTNAME}=http://guacamole:8080"
-)
-
 # Variáveis dinâmicas do BunkerWeb
 BUNKER_ENV=()
-
 SERVER_NAMES=()
 
-for SERVICE in "${SERVICES[@]}"; do
-  HOST="${SERVICE%%=*}"
-  BACKEND="${SERVICE#*=}"
+# Diretório de configurações
+CONFIG_DIR="$(dirname "$0")/configs"
 
-  SERVER_NAMES+=("$HOST")
+echo "Loading configurations from $CONFIG_DIR..."
 
-  BUNKER_ENV+=(
-    -e "${HOST}_USE_REVERSE_PROXY=yes"
-    -e "${HOST}_REVERSE_PROXY_HOST=${BACKEND}"
-    -e "${HOST}_SECURITY_MODE=detect"
-  )
-
-  # Desativar modificação de cookies para aplicações que gerem os seus próprios cookies
-  if [[ "$HOST" == "$KEYCLOAK_HOSTNAME" ]] || [[ "$HOST" == "$NEXTCLOUD_HOSTNAME" ]]; then
-    BUNKER_ENV+=(-e "${HOST}_COOKIE_FLAGS=")
-  fi
-
-  # Configurações específicas para Nextcloud
-  if [[ "$HOST" == "$NEXTCLOUD_HOSTNAME" ]]; then
-    BUNKER_ENV+=(
-      -e "${HOST}_REVERSE_PROXY_WS=yes"
-      -e "${HOST}_REVERSE_PROXY_INTERCEPT_ERRORS=no"
-      -e "${HOST}_REVERSE_PROXY_CONNECT_TIMEOUT=300s"
-      -e "${HOST}_REVERSE_PROXY_READ_TIMEOUT=300s"
-      -e "${HOST}_REVERSE_PROXY_SEND_TIMEOUT=300s"
-      -e "${HOST}_MAX_CLIENT_SIZE=16G"
-      -e "${HOST}_CLIENT_BODY_TIMEOUT=300s"
-      -e "${HOST}_PROXY_BUFFERING=no"
-    )
+for config in "$CONFIG_DIR"/*.sh; do
+  if [ -f "$config" ]; then
+    echo "  - Sourcing $config"
+    source "$config"
   fi
 done
 
