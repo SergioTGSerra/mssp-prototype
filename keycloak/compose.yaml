@@ -4,15 +4,15 @@ services:
     container_name: keycloak-postgres
     restart: always
     environment:
-      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
-      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_DB: keycloak_db
+      POSTGRES_USER: keycloak_db_user
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     networks:
       - keycloak-network
     volumes:
       - keycloak-postgres-data:/var/lib/postgresql:Z
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U keycloak_db_user -d keycloak_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -28,8 +28,8 @@ services:
         condition: service_healthy
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/${KEYCLOAK_DB_NAME}
-      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak_db
+      KC_DB_USERNAME: keycloak_db_user
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
