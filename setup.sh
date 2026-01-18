@@ -11,8 +11,8 @@ update_or_create_env DOMAIN "${DOMAIN}"
 
 # 1. Setup Prerequisites (OpenSSL, Podman)
 echo ">> Step 1: Checking/Installing Prerequisites..."
-if [ -f "./setup_prerequisites.sh" ]; then
-    ./setup_prerequisites.sh
+if [ -f "./prerequisites.sh" ]; then
+    ./prerequisites.sh
     if [ $? -ne 0 ]; then
         echo "Error: Prerequisites setup failed. Exiting."
         exit 1
@@ -59,15 +59,15 @@ if [ -f "./mail/setup.sh" ]; then
     fi
 fi
 
-# # 6. Setup Nextcloud
-# echo ">> Step 6: Installing Nextcloud..."
-# if [ -f "./nextcloud/setup.sh" ]; then
-#     ./nextcloud/setup.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Nextcloud setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
+# 6. Setup Nextcloud
+echo ">> Step 6: Installing Nextcloud..."
+if [ -f "./nextcloud/setup.sh" ]; then
+    ./nextcloud/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Nextcloud setup failed. Exiting."
+        exit 1
+    fi
+fi
 
 # # 7. Setup GLPI
 # echo ">> Step 7: Installing GLPI..."
