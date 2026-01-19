@@ -17,4 +17,24 @@ BUNKER_ENV+=(
     -e "${HOST}_MAX_CLIENT_SIZE=16G"
     -e "${HOST}_CLIENT_BODY_TIMEOUT=300s"
     -e "${HOST}_PROXY_BUFFERING=no"
+    
+    # Cache and compression
+    -e "${HOST}_USE_CLIENT_CACHE=yes"
+    -e "${HOST}_USE_GZIP=yes"
+    
+    # Security headers
+    -e "${HOST}_X_FRAME_OPTIONS=SAMEORIGIN"
+    -e "${HOST}_ALLOWED_METHODS=GET|POST|HEAD|COPY|DELETE|LOCK|MKCOL|MOVE|PROPFIND|PROPPATCH|PUT|UNLOCK|OPTIONS|REPORT"
+    -e "${HOST}_BAD_BEHAVIOR_STATUS_CODES=400 401 403 405 444"
+    
+    # Rate limiting
+    -e "${HOST}_LIMIT_REQ_URL_1=/apps"
+    -e "${HOST}_LIMIT_REQ_RATE_1=5r/s"
+    -e "${HOST}_LIMIT_REQ_URL_2=/apps/text/session/sync"
+    -e "${HOST}_LIMIT_REQ_RATE_2=8r/s"
+    -e "${HOST}_LIMIT_REQ_URL_3=/core/preview"
+    -e "${HOST}_LIMIT_REQ_RATE_3=5r/s"
+    
+    # ModSecurity CRS plugin for Nextcloud
+    -e "${HOST}_MODSECURITY_CRS_PLUGINS=nextcloud-rule-exclusions"
 )
