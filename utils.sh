@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# Function to load environment variables from .env file
-load_env() {
-    local env_file="${1:-.env}"
-    if [ -f "$env_file" ]; then
-        export $(grep -v '^#' "$env_file" | xargs)
-    else
-        echo "Warning: $env_file not found."
-    fi
-}
-
 # Function to update or create environment variables in .env file
 update_or_create_env() {
     local key="$1"
