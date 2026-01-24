@@ -82,7 +82,7 @@ podman exec -u www-data nextcloud-aio-nextcloud php occ config:app:set user_oidc
 
 # Install mail_oidc_bridge app
 echo ">> Installing mail_oidc_bridge app..."
-podman cp $PWD/nextcloud/apps/mail_oidc_bridge nextcloud-aio-nextcloud:/var/www/html/custom_apps/
+podman cp $PWD/nextcloud-aio/apps/mail_oidc_bridge nextcloud-aio-nextcloud:/var/www/html/custom_apps/
 podman exec nextcloud-aio-nextcloud chown -R www-data:www-data /var/www/html/custom_apps/mail_oidc_bridge
 podman exec -u www-data nextcloud-aio-nextcloud php occ app:enable mail_oidc_bridge
 
