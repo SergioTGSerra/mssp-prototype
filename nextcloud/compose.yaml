@@ -1,6 +1,7 @@
 services:
-  nextcloud-aio-apache:
+  nextcloud-apache:
     image: ghcr.io/nextcloud-releases/aio-apache:latest
+    container_name: nextcloud-apache
     user: "33"
     init: true
     healthcheck:
@@ -14,24 +15,24 @@ services:
       - ${APACHE_IP_BINDING}:${APACHE_PORT}:${APACHE_PORT}/tcp
       - ${APACHE_IP_BINDING}:${APACHE_PORT}:${APACHE_PORT}/udp
     networks:
-      - default
+      - nextcloud-network
       - waf
     environment:
       - NC_DOMAIN
-      - NEXTCLOUD_HOST=nextcloud-aio-nextcloud
-      - APACHE_HOST=nextcloud-aio-apache
-      - COLLABORA_HOST=nextcloud-aio-collabora
-      - TALK_HOST=nextcloud-aio-talk
+      - NEXTCLOUD_HOST=nextcloud-nextcloud
+      - APACHE_HOST=nextcloud-apache
+      - COLLABORA_HOST=nextcloud-collabora
+      - TALK_HOST=nextcloud-talk
       - APACHE_PORT
-      - ONLYOFFICE_HOST=nextcloud-aio-onlyoffice
+      - ONLYOFFICE_HOST=nextcloud-onlyoffice
       - TZ=${TIMEZONE}
       - APACHE_MAX_SIZE
       - APACHE_MAX_TIME=${NEXTCLOUD_MAX_TIME}
-      - NOTIFY_PUSH_HOST=nextcloud-aio-notify-push
-      - WHITEBOARD_HOST=nextcloud-aio-whiteboard
+      - NOTIFY_PUSH_HOST=nextcloud-notify-push
+      - WHITEBOARD_HOST=nextcloud-whiteboard
     volumes:
-      - nextcloud_aio_nextcloud:/var/www/html:ro
-      - nextcloud_aio_apache:/mnt/data:rw
+      - nextcloud-nextcloud-data:/var/www/html:ro
+      - nextcloud-apache-data:/mnt/data:rw
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -43,8 +44,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-database:
+  nextcloud-database:
     image: ghcr.io/nextcloud-releases/aio-postgresql:latest
+    container_name: nextcloud-database
     user: "999"
     init: true
     healthcheck:
@@ -56,9 +58,11 @@ services:
       retries: 3
     expose:
       - "5432"
+    networks:
+      - nextcloud-network
     volumes:
-      - nextcloud_aio_database:/var/lib/postgresql/data:rw
-      - nextcloud_aio_database_dump:/mnt/data:rw
+      - nextcloud-database-data:/var/lib/postgresql/data:rw
+      - nextcloud-database-dump:/mnt/data:rw
     environment:
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=nextcloud_database
@@ -74,8 +78,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-nextcloud:
+  nextcloud-nextcloud:
     image: ghcr.io/nextcloud-releases/aio-nextcloud:latest
+    container_name: nextcloud-nextcloud
     init: true
     healthcheck:
       start_period: 0s
@@ -88,24 +93,24 @@ services:
       - "9000"
       - "9001"
     networks:
-      - default
+      - nextcloud-network
       - mail-network
     volumes:
-      - nextcloud_aio_nextcloud:/var/www/html:rw
+      - nextcloud-nextcloud-data:/var/www/html:rw
       - ${NEXTCLOUD_DATADIR}:/mnt/ncdata:rw
       - ${NEXTCLOUD_MOUNT}:${NEXTCLOUD_MOUNT}:rw
       - ${NEXTCLOUD_TRUSTED_CACERTS_DIR}:/usr/local/share/ca-certificates:ro
     environment:
-      - NEXTCLOUD_HOST=nextcloud-aio-nextcloud
-      - POSTGRES_HOST=nextcloud-aio-database
+      - NEXTCLOUD_HOST=nextcloud-nextcloud
+      - POSTGRES_HOST=nextcloud-database
       - POSTGRES_PORT=5432
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=nextcloud_database
       - POSTGRES_USER=nextcloud
-      - REDIS_HOST=nextcloud-aio-redis
+      - REDIS_HOST=nextcloud-redis
       - REDIS_PORT=6379
       - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
-      - APACHE_HOST=nextcloud-aio-apache
+      - APACHE_HOST=nextcloud-apache
       - APACHE_PORT
       - NC_DOMAIN
       - ADMIN_USER=admin
@@ -118,25 +123,25 @@ services:
       - ONLYOFFICE_SECRET
       - NEXTCLOUD_MOUNT
       - CLAMAV_ENABLED
-      - CLAMAV_HOST=nextcloud-aio-clamav
+      - CLAMAV_HOST=nextcloud-clamav
       - ONLYOFFICE_ENABLED
       - COLLABORA_ENABLED
-      - COLLABORA_HOST=nextcloud-aio-collabora
+      - COLLABORA_HOST=nextcloud-collabora
       - TALK_ENABLED
-      - ONLYOFFICE_HOST=nextcloud-aio-onlyoffice
+      - ONLYOFFICE_HOST=nextcloud-onlyoffice
       - UPDATE_NEXTCLOUD_APPS
       - TZ=${TIMEZONE}
       - TALK_PORT
       - IMAGINARY_ENABLED
-      - IMAGINARY_HOST=nextcloud-aio-imaginary
+      - IMAGINARY_HOST=nextcloud-imaginary
       - PHP_UPLOAD_LIMIT=${NEXTCLOUD_UPLOAD_LIMIT}
       - PHP_MEMORY_LIMIT=${NEXTCLOUD_MEMORY_LIMIT}
       - FULLTEXTSEARCH_ENABLED
-      - FULLTEXTSEARCH_HOST=nextcloud-aio-fulltextsearch
+      - FULLTEXTSEARCH_HOST=nextcloud-fulltextsearch
       - FULLTEXTSEARCH_PROTOCOL=http
       - FULLTEXTSEARCH_PORT=9200
       - FULLTEXTSEARCH_USER=elastic
-      - FULLTEXTSEARCH_INDEX=nextcloud-aio
+      - FULLTEXTSEARCH_INDEX=nextcloud
       - PHP_MAX_TIME=${NEXTCLOUD_MAX_TIME}
       - TRUSTED_CACERTS_DIR=${NEXTCLOUD_TRUSTED_CACERTS_DIR}
       - STARTUP_APPS=${NEXTCLOUD_STARTUP_APPS}
@@ -145,7 +150,7 @@ services:
       - INSTALL_LATEST_MAJOR
       - TALK_RECORDING_ENABLED
       - RECORDING_SECRET
-      - TALK_RECORDING_HOST=nextcloud-aio-talk-recording
+      - TALK_RECORDING_HOST=nextcloud-talk-recording
       - FULLTEXTSEARCH_PASSWORD
       - REMOVE_DISABLED_APPS
       - IMAGINARY_SECRET
@@ -156,8 +161,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-notify-push:
+  nextcloud-notify-push:
     image: ghcr.io/nextcloud-releases/aio-notify-push:latest
+    container_name: nextcloud-notify-push
     user: "33"
     init: true
     healthcheck:
@@ -169,16 +175,18 @@ services:
       retries: 3
     expose:
       - "7867"
+    networks:
+      - nextcloud-network
     volumes:
-      - nextcloud_aio_nextcloud:/nextcloud:ro
+      - nextcloud-nextcloud-data:/nextcloud:ro
     environment:
       - NC_DOMAIN
-      - NEXTCLOUD_HOST=nextcloud-aio-nextcloud
+      - NEXTCLOUD_HOST=nextcloud-nextcloud
       - TZ=${TIMEZONE}
-      - REDIS_HOST=nextcloud-aio-redis
+      - REDIS_HOST=nextcloud-redis
       - REDIS_PORT=6379
       - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
-      - POSTGRES_HOST=nextcloud-aio-database
+      - POSTGRES_HOST=nextcloud-database
       - POSTGRES_PORT=5432
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
       - POSTGRES_DB=nextcloud_database
@@ -188,8 +196,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-redis:
+  nextcloud-redis:
     image: ghcr.io/nextcloud-releases/aio-redis:latest
+    container_name: nextcloud-redis
     user: "999"
     init: true
     healthcheck:
@@ -201,19 +210,22 @@ services:
       retries: 3
     expose:
       - "6379"
+    networks:
+      - nextcloud-network
     environment:
       - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
       - TZ=${TIMEZONE}
     volumes:
-      - nextcloud_aio_redis:/data:rw
+      - nextcloud-redis-data:/data:rw
     restart: unless-stopped
     read_only: true
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-collabora:
+  nextcloud-collabora:
     command: ${ADDITIONAL_COLLABORA_OPTIONS}
     image: ghcr.io/nextcloud-releases/aio-collabora:latest
+    container_name: nextcloud-collabora
     init: true
     healthcheck:
       start_period: 60s
@@ -224,8 +236,10 @@ services:
       retries: 9
     expose:
       - "9980"
+    networks:
+      - nextcloud-network
     environment:
-      - aliasgroup1=https://${NC_DOMAIN}:443,http://nextcloud-aio-apache:23973
+      - aliasgroup1=https://${NC_DOMAIN}:443,http://nextcloud-apache:23973
       - extra_params=--o:ssl.enable=false --o:ssl.termination=true --o:logging.disable_server_audit=true --o:logging.level=warning --o:logging.level_startup=warning --o:welcome.enable=false --o:remote_font_config.url=https://${NC_DOMAIN}/apps/richdocuments/settings/fonts.json --o:net.post_allow.host[0]=.+
       - dictionaries=${COLLABORA_DICTIONARIES}
       - TZ=${TIMEZONE}
@@ -243,8 +257,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-talk:
+  nextcloud-talk:
     image: ghcr.io/nextcloud-releases/aio-talk:latest
+    container_name: nextcloud-talk
     user: "1000"
     init: true
     healthcheck:
@@ -259,9 +274,11 @@ services:
       - ${TALK_PORT}:${TALK_PORT}/udp
     expose:
       - "8081"
+    networks:
+      - nextcloud-network
     environment:
       - NC_DOMAIN
-      - TALK_HOST=nextcloud-aio-talk
+      - TALK_HOST=nextcloud-talk
       - TURN_SECRET
       - SIGNALING_SECRET
       - TZ=${TIMEZONE}
@@ -281,8 +298,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-talk-recording:
+  nextcloud-talk-recording:
     image: ghcr.io/nextcloud-releases/aio-talk-recording:latest
+    container_name: nextcloud-talk-recording
     user: "122"
     init: true
     healthcheck:
@@ -294,13 +312,15 @@ services:
       retries: 3
     expose:
       - "1234"
+    networks:
+      - nextcloud-network
     environment:
       - NC_DOMAIN
       - TZ=${TIMEZONE}
       - RECORDING_SECRET
       - INTERNAL_SECRET=${TALK_INTERNAL_SECRET}
     volumes:
-      - nextcloud_aio_talk_recording:/tmp:rw
+      - nextcloud-talk-recording-data:/tmp:rw
     shm_size: 2147483648
     restart: unless-stopped
     profiles:
@@ -311,8 +331,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-clamav:
+  nextcloud-clamav:
     image: ghcr.io/nextcloud-releases/aio-clamav:latest
+    container_name: nextcloud-clamav
     user: "100"
     init: false
     healthcheck:
@@ -324,11 +345,13 @@ services:
       retries: 9
     expose:
       - "3310"
+    networks:
+      - nextcloud-network
     environment:
       - TZ=${TIMEZONE}
       - MAX_SIZE=${NEXTCLOUD_UPLOAD_LIMIT}
     volumes:
-      - nextcloud_aio_clamav:/var/lib/clamav:rw
+      - nextcloud-clamav-data:/var/lib/clamav:rw
     restart: unless-stopped
     profiles:
       - clamav
@@ -342,8 +365,9 @@ services:
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-onlyoffice:
+  nextcloud-onlyoffice:
     image: ghcr.io/nextcloud-releases/aio-onlyoffice:latest
+    container_name: nextcloud-onlyoffice
     init: true
     healthcheck:
       start_period: 60s
@@ -354,21 +378,24 @@ services:
       retries: 9
     expose:
       - "80"
+    networks:
+      - nextcloud-network
     environment:
       - TZ=${TIMEZONE}
       - JWT_ENABLED=true
       - JWT_HEADER=AuthorizationJwt
       - JWT_SECRET=${ONLYOFFICE_SECRET}
     volumes:
-      - nextcloud_aio_onlyoffice:/var/lib/onlyoffice:rw
+      - nextcloud-onlyoffice-data:/var/lib/onlyoffice:rw
     restart: unless-stopped
     profiles:
       - onlyoffice
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-imaginary:
+  nextcloud-imaginary:
     image: ghcr.io/nextcloud-releases/aio-imaginary:latest
+    container_name: nextcloud-imaginary
     user: "65534"
     init: true
     healthcheck:
@@ -380,6 +407,8 @@ services:
       retries: 3
     expose:
       - "9000"
+    networks:
+      - nextcloud-network
     environment:
       - TZ=${TIMEZONE}
       - IMAGINARY_SECRET
@@ -394,8 +423,9 @@ services:
     tmpfs:
       - /tmp
 
-  nextcloud-aio-fulltextsearch:
+  nextcloud-fulltextsearch:
     image: ghcr.io/nextcloud-releases/aio-fulltextsearch:latest
+    container_name: nextcloud-fulltextsearch
     init: false
     healthcheck:
       start_period: 60s
@@ -406,11 +436,13 @@ services:
       retries: 5
     expose:
       - "9200"
+    networks:
+      - nextcloud-network
     environment:
       - TZ=${TIMEZONE}
       - ES_JAVA_OPTS=${FULLTEXTSEARCH_JAVA_OPTIONS}
       - bootstrap.memory_lock=false
-      - cluster.name=nextcloud-aio
+      - cluster.name=nextcloud
       - discovery.type=single-node
       - logger.level=WARN
       - http.port=9200
@@ -418,15 +450,16 @@ services:
       - xpack.security.enabled=false
       - FULLTEXTSEARCH_PASSWORD
     volumes:
-      - nextcloud_aio_elasticsearch:/usr/share/elasticsearch/data:rw
+      - nextcloud-elasticsearch-data:/usr/share/elasticsearch/data:rw
     restart: unless-stopped
     profiles:
       - fulltextsearch
     cap_drop:
       - NET_RAW
 
-  nextcloud-aio-whiteboard:
+  nextcloud-whiteboard:
     image: ghcr.io/nextcloud-releases/aio-whiteboard:latest
+    container_name: nextcloud-whiteboard
     user: "65534"
     init: true
     healthcheck:
@@ -438,6 +471,8 @@ services:
       retries: 3
     expose:
       - "3002"
+    networks:
+      - nextcloud-network
     tmpfs:
       - /tmp
     environment:
@@ -445,7 +480,7 @@ services:
       - NEXTCLOUD_URL=https://${NC_DOMAIN}
       - JWT_SECRET_KEY=${WHITEBOARD_SECRET}
       - STORAGE_STRATEGY=redis
-      - REDIS_HOST=nextcloud-aio-redis
+      - REDIS_HOST=nextcloud-redis
       - REDIS_PORT=6379
       - REDIS_HOST_PASSWORD=${REDIS_PASSWORD}
       - BACKUP_DIR=/tmp
@@ -456,32 +491,31 @@ services:
     cap_drop:
       - NET_RAW
 
-volumes:
-  nextcloud_aio_apache:
-    name: nextcloud_aio_apache
-  nextcloud_aio_clamav:
-    name: nextcloud_aio_clamav
-  nextcloud_aio_database:
-    name: nextcloud_aio_database
-  nextcloud_aio_database_dump:
-    name: nextcloud_aio_database_dump
-  nextcloud_aio_elasticsearch:
-    name: nextcloud_aio_elasticsearch
-  nextcloud_aio_nextcloud:
-    name: nextcloud_aio_nextcloud
-  nextcloud_aio_onlyoffice:
-    name: nextcloud_aio_onlyoffice
-  nextcloud_aio_redis:
-    name: nextcloud_aio_redis
-  nextcloud_aio_talk_recording:
-    name: nextcloud_aio_talk_recording
-  nextcloud_aio_nextcloud_data:
-    name: nextcloud_aio_nextcloud_data
-
 networks:
-  default:
+  nextcloud-network:
+    name: nextcloud-network
     driver: bridge
   waf:
     external: true
   mail-network:
     external: true
+
+volumes:
+  nextcloud-apache-data:
+    name: nextcloud-apache-data
+  nextcloud-clamav-data:
+    name: nextcloud-clamav-data
+  nextcloud-database-data:
+    name: nextcloud-database-data
+  nextcloud-database-dump:
+    name: nextcloud-database-dump
+  nextcloud-elasticsearch-data:
+    name: nextcloud-elasticsearch-data
+  nextcloud-nextcloud-data:
+    name: nextcloud-nextcloud-data
+  nextcloud-onlyoffice-data:
+    name: nextcloud-onlyoffice-data
+  nextcloud-redis-data:
+    name: nextcloud-redis-data
+  nextcloud-talk-recording-data:
+    name: nextcloud-talk-recording-data

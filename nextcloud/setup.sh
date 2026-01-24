@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# podman-compose -f $PWD/nextcloud/compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
-podman-compose -f $PWD/nextcloud/compose.yaml up -d
+podman-compose -f $PWD/nextcloud/compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
+
 # 5. Configure Maintenance Window (4 AM to 8 AM)
 #podman exec -u www-data nextcloud php occ config:system:set maintenance_window_start --value=4 --type=integer
 
