@@ -88,18 +88,36 @@ podman exec -u www-data nextcloud-nextcloud php occ app:enable mail_oidc_bridge
 
 # # Configure Mail provisioning (auto-creates mail accounts for users)
 echo ">> Configuring Mail provisioning..."
-podman exec nextcloud-database psql -U nextcloud -d nextcloud_database -c "
-INSERT INTO oc_mail_provisionings (
-    provisioning_domain, email_template, 
-    imap_user, imap_host, imap_port, imap_ssl_mode,
-    smtp_user, smtp_host, smtp_port, smtp_ssl_mode,
-    sieve_enabled, ldap_aliases_provisioning, master_password_enabled
-) VALUES (
-    'netzor.pt', '%EMAIL%',
-    '%EMAIL%', '${MAILSERVER_HOSTNAME}', 143, 'none',
-    '%EMAIL%', '${MAILSERVER_HOSTNAME}', 587, 'none',
-    false, false, false
-) ON CONFLICT DO NOTHING;
-"
+
+# Wait for the Mail app to create its database tables
+echo ">> Waiting for Mail app database tables..."
+timeout=60
+while [ $timeout -gt 0 ]; do
+    if podman exec nextcloud-database psql -U nextcloud -d nextcloud_database -c "\dt oc_mail_provisionings" 2>/dev/null | grep -q "oc_mail_provisionings"; then
+        echo ">> Mail provisioning table ready."
+        break
+    fi
+    sleep 2
+    timeout=$((timeout - 2))
+done
+
+if [ $timeout -le 0 ]; then
+    echo ">> WARNING: Mail provisioning table not found. Skipping provisioning config."
+else
+    podman exec nextcloud-database psql -U nextcloud -d nextcloud_database -c "
+    INSERT INTO oc_mail_provisionings (
+        provisioning_domain, email_template, 
+        imap_user, imap_host, imap_port, imap_ssl_mode,
+        smtp_user, smtp_host, smtp_port, smtp_ssl_mode,
+        sieve_enabled, ldap_aliases_provisioning, master_password_enabled
+    ) VALUES (
+        'netzor.pt', '%EMAIL%',
+        '%EMAIL%', '${MAILSERVER_HOSTNAME}', 143, 'none',
+        '%EMAIL%', '${MAILSERVER_HOSTNAME}', 587, 'none',
+        false, false, false
+    ) ON CONFLICT (provisioning_domain) DO NOTHING;
+    "
+    echo ">> Mail provisioning configured."
+fi
 
 # echo ">> Nextcloud OIDC and Mail configuration complete."
