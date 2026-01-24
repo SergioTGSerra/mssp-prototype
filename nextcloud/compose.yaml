@@ -31,7 +31,7 @@ services:
       - NOTIFY_PUSH_HOST=nextcloud-notify-push
       - WHITEBOARD_HOST=nextcloud-whiteboard
     volumes:
-      - nextcloud-nextcloud-data:/var/www/html:ro
+      - nextcloud-nextcloud-files:/var/www/html:ro
       - nextcloud-apache-data:/mnt/data:rw
     restart: unless-stopped
     read_only: true
@@ -96,7 +96,7 @@ services:
       - nextcloud-network
       - mail-network
     volumes:
-      - nextcloud-nextcloud-data:/var/www/html:rw
+      - nextcloud-nextcloud-files:/var/www/html:rw
       - ${NEXTCLOUD_DATADIR}:/mnt/ncdata:rw
       - ${NEXTCLOUD_MOUNT}:${NEXTCLOUD_MOUNT}:rw
       - ${NEXTCLOUD_TRUSTED_CACERTS_DIR}:/usr/local/share/ca-certificates:ro
@@ -178,7 +178,7 @@ services:
     networks:
       - nextcloud-network
     volumes:
-      - nextcloud-nextcloud-data:/nextcloud:ro
+      - nextcloud-nextcloud-files:/nextcloud:ro
     environment:
       - NC_DOMAIN
       - NEXTCLOUD_HOST=nextcloud-nextcloud
@@ -511,11 +511,13 @@ volumes:
     name: nextcloud-database-dump
   nextcloud-elasticsearch-data:
     name: nextcloud-elasticsearch-data
-  nextcloud-nextcloud-data:
-    name: nextcloud-nextcloud-data
+  nextcloud-nextcloud-files:
+    name: nextcloud-nextcloud-files
   nextcloud-onlyoffice-data:
     name: nextcloud-onlyoffice-data
   nextcloud-redis-data:
     name: nextcloud-redis-data
   nextcloud-talk-recording-data:
     name: nextcloud-talk-recording-data
+  nextcloud-nextcloud-data:
+    name: nextcloud-nextcloud-data
