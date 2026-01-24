@@ -2,9 +2,7 @@
 
 # Import utils and load environment variables
 source ./utils.sh
-set -a
-source .env
-set +a
+set -a; source .env; set +a
 
 # Prompt for domain (only user input required)
 read -p "Enter your domain [${DOMAIN}]: " USER_DOMAIN
