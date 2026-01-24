@@ -1,5 +1,21 @@
 services:
   nextcloud-apache:
+    depends_on:
+      nextcloud-onlyoffice:
+        condition: service_started
+        required: false
+      nextcloud-talk:
+        condition: service_started
+        required: false
+      nextcloud-notify-push:
+        condition: service_started
+        required: false
+      nextcloud-whiteboard:
+        condition: service_started
+        required: false
+      nextcloud-nextcloud:
+        condition: service_started
+        required: false
     image: ghcr.io/nextcloud-releases/aio-apache:latest
     container_name: nextcloud-apache
     user: "33"
@@ -79,6 +95,22 @@ services:
       - NET_RAW
 
   nextcloud-nextcloud:
+    depends_on:
+      nextcloud-database:
+        condition: service_started
+        required: false
+      nextcloud-redis:
+        condition: service_started
+        required: false
+      nextcloud-clamav:
+        condition: service_started
+        required: false
+      nextcloud-fulltextsearch:
+        condition: service_started
+        required: false
+      nextcloud-imaginary:
+        condition: service_started
+        required: false
     image: ghcr.io/nextcloud-releases/aio-nextcloud:latest
     container_name: nextcloud-nextcloud
     init: true
