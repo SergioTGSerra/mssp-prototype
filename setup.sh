@@ -63,8 +63,8 @@ fi
 
 # 6. Setup Nextcloud
 echo ">> Step 6: Installing Nextcloud..."
-if [ -f "./nextcloud/setup.sh" ]; then
-    ./nextcloud/setup.sh
+if [ -f "./nextcloud-aio/setup.sh" ]; then
+    ./nextcloud-aio/setup.sh
     if [ $? -ne 0 ]; then
         echo "Error: Nextcloud setup failed. Exiting."
         exit 1
