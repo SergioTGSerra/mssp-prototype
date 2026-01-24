@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+#Load env
+set -a; source .env; set +a
+
 # Criar network se não existir
 podman network exists waf || podman network create waf
 
