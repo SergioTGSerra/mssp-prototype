@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#Load env
+set -a
+source .env
+set +a
+
 podman-compose -f $PWD/nextcloud/compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
 
 # 5. Configure Maintenance Window (4 AM to 8 AM)
@@ -12,68 +17,69 @@ podman-compose -f $PWD/nextcloud/compose.yaml --profile onlyoffice --profile tal
 #podman exec -u www-data nextcloud php occ db:add-missing-indices
 
 # Wait for Nextcloud to be fully installed
-# echo ">> Waiting for Nextcloud to be fully installed (this may take a few minutes)..."
-# timeout=300
-# while [ $timeout -gt 0 ]; do
-#     if podman exec -u www-data nextcloud php occ status 2>/dev/null | grep -q "installed: true"; then
-#         echo ">> Nextcloud is installed and ready."
-#         break
-#     fi
-#     sleep 5
-#     timeout=$((timeout - 5))
-# done
+echo ">> Waiting for Nextcloud to be fully installed (this may take a few minutes)..."
+timeout=300
+while [ $timeout -gt 0 ]; do
+    if podman exec -u www-data nextcloud-nextcloud php occ status 2>/dev/null | grep -q "installed: true"; then
+        echo ">> Nextcloud is installed and ready."
+        break
+    fi
+    sleep 5
+    timeout=$((timeout - 5))
+done
 
-# if [ $timeout -le 0 ]; then
-#     echo ">> ERROR: Nextcloud installation did not complete within the timeout."
-#     exit 1
-# fi
+if [ $timeout -le 0 ]; then
+    echo ">> ERROR: Nextcloud installation did not complete within the timeout."
+    exit 1
+fi
 
-# # 8. Disable First Run Wizard and Enable Calendar/Mail Apps
-# echo ">> Configuring Nextcloud apps..."
-# podman exec -u www-data nextcloud php occ app:disable firstrunwizard
-# podman exec -u www-data nextcloud php occ app:install calendar || podman exec -u www-data nextcloud php occ app:enable calendar
-# podman exec -u www-data nextcloud php occ app:install mail || podman exec -u www-data nextcloud php occ app:enable mail
-# podman exec -u www-data nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud php occ app:enable user_oidc
+# Disable First Run Wizard and Enable OIDC
+echo ">> Configuring Nextcloud apps..."
+podman exec -u www-data nextcloud-nextcloud php occ app:disable firstrunwizard
+podman exec -u www-data nextcloud-nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud-nextcloud php occ app:enable user_oidc
 
-# # Create Nextcloud OIDC client
-# echo "Creating Nextcloud OIDC client..."
-# if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=${NEXTCLOUD_OIDC_CLIENT_ID} --fields clientId 2>/dev/null | grep -q "${NEXTCLOUD_OIDC_CLIENT_ID}"; then
-#     echo "Nextcloud OIDC client already exists."
-# else
-#     if podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor \
-#         -s clientId="${NEXTCLOUD_OIDC_CLIENT_ID}" \
-#         -s enabled=true \
-#         -s clientAuthenticatorType=client-secret \
-#         -s secret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-#         -s "redirectUris=[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
-#         -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
-#         -s publicClient=false \
-#         -s protocol=openid-connect \
-#         -s 'defaultClientScopes=["profile", "openid", "email"]' \
-#         > /dev/null 2>&1; then
-#         echo "Nextcloud OIDC client created successfully."
-#     else
-#         echo "ERROR: Failed to create Nextcloud OIDC client."
-#     fi
-# fi
+# Create Nextcloud OIDC client
+echo "Creating Nextcloud OIDC client..."
+if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=${NEXTCLOUD_OIDC_CLIENT_ID} --fields clientId 2>/dev/null | grep -q "${NEXTCLOUD_OIDC_CLIENT_ID}"; then
+    echo "Nextcloud OIDC client already exists."
+else
+    if podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor \
+        -s clientId="${NEXTCLOUD_OIDC_CLIENT_ID}" \
+        -s enabled=true \
+        -s clientAuthenticatorType=client-secret \
+        -s secret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
+        -s "redirectUris=[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
+        -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
+        -s publicClient=false \
+        -s protocol=openid-connect \
+        -s 'defaultClientScopes=["profile", "openid", "email"]' \
+        > /dev/null 2>&1; then
+        echo "Nextcloud OIDC client created successfully."
+    else
+        echo "ERROR: Failed to create Nextcloud OIDC client."
+    fi
+fi
 
-# # Set skeleton directory to empty string
-# podman exec -u www-data nextcloud php occ config:system:set skeletondirectory --value=''
-# # Set allow_multiple_user_backends to false
-# podman exec -u www-data nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
+# Set skeleton directory to empty string
+podman exec -u www-data nextcloud-nextcloud php occ config:system:set skeletondirectory --value=''
+# Set allow_multiple_user_backends to false
+podman exec -u www-data nextcloud-nextcloud php occ config:app:set --type=string --value=0 user_oidc allow_multiple_user_backends
 
 # # Configure OIDC provider (Keycloak)
 # echo ">> Configuring Keycloak OIDC provider..."
-# podman exec -u www-data nextcloud php occ config:system:set allow_local_remote_servers --value=true --type=boolean
-# podman exec -u www-data nextcloud php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
+podman exec -u www-data nextcloud-nextcloud php occ config:system:set allow_local_remote_servers --value=true --type=boolean
+podman exec -u www-data nextcloud-nextcloud php occ config:app:set user_oidc httpclient.allowselfsigned --value=1
+# Disable SSL verification for internal OIDC connections (staging/self-signed certs)
+podman exec -u www-data nextcloud-nextcloud php occ config:system:set curlconfig.ssl.verifypeer --value=false --type=boolean
+podman exec -u www-data nextcloud-nextcloud php occ config:system:set curlconfig.ssl.verifyhost --value=false --type=boolean
 
-# podman exec -u www-data nextcloud php occ user_oidc:provider keycloak \
-#     --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
-#     --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-#     --discoveryuri="http://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration" 
+podman exec -u www-data nextcloud-nextcloud php occ user_oidc:provider keycloak \
+    --clientid="${NEXTCLOUD_OIDC_CLIENT_ID}" \
+    --clientsecret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
+    --discoveryuri="https://${KEYCLOAK_HOSTNAME}/realms/netzor/.well-known/openid-configuration" 
 
 # # Enable store_login_token for OIDC tokens
-# podman exec -u www-data nextcloud php occ config:app:set user_oidc store_login_token --value=1
+podman exec -u www-data nextcloud-nextcloud php occ config:app:set user_oidc store_login_token --value=1
 
 # # Install mail_oidc_bridge app
 # echo ">> Installing mail_oidc_bridge app..."
