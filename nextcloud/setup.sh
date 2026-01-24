@@ -1,9 +1,8 @@
 #!/bin/bash
 
 #Load env
-set -a
-source .env
-set +a
+set -a; source .env; set +a
+
 
 podman-compose -f $PWD/nextcloud/compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
 

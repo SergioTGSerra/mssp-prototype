@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+#Load env
+set -a; source .env; set +a
+
 #Add mailserver-bind user to FreeIPA
 echo "Configuring FreeIPA Mailserver Bind User..."
 podman exec freeipa bash -c "
