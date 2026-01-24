@@ -27,13 +27,15 @@ BUNKER_ENV+=(
     -e "${HOST}_ALLOWED_METHODS=GET|POST|HEAD|COPY|DELETE|LOCK|MKCOL|MOVE|PROPFIND|PROPPATCH|PUT|UNLOCK|OPTIONS|REPORT"
     -e "${HOST}_BAD_BEHAVIOR_STATUS_CODES=400 401 403 405 444"
     
-    # Rate limiting
-    -e "${HOST}_LIMIT_REQ_URL_1=/apps"
-    -e "${HOST}_LIMIT_REQ_RATE_1=5r/s"
+    # Rate limiting (regras mais específicas primeiro)
+    -e "${HOST}_LIMIT_REQ_URL_1=/apps/onlyoffice"
+    -e "${HOST}_LIMIT_REQ_RATE_1=50r/s"
     -e "${HOST}_LIMIT_REQ_URL_2=/apps/text/session/sync"
     -e "${HOST}_LIMIT_REQ_RATE_2=8r/s"
-    -e "${HOST}_LIMIT_REQ_URL_3=/core/preview"
+    -e "${HOST}_LIMIT_REQ_URL_3=/apps"
     -e "${HOST}_LIMIT_REQ_RATE_3=5r/s"
+    -e "${HOST}_LIMIT_REQ_URL_4=/core/preview"
+    -e "${HOST}_LIMIT_REQ_RATE_4=5r/s"
     
     # ModSecurity CRS plugin for Nextcloud
     -e "${HOST}_MODSECURITY_CRS_PLUGINS=nextcloud-rule-exclusions"
