@@ -19,7 +19,7 @@ BUNKER_ENV+=(
     -e "${HOST}_PROXY_BUFFERING=no"
     
     # Cache (GZIP desativado - Nextcloud já comprime, evita corrupção de SVGs)
-    -e "${HOST}_USE_CLIENT_CACHE=yes"
+    -e "${HOST}_USE_CLIENT_CACHE=no"
     -e "${HOST}_USE_GZIP=no"
     
     # Security headers
