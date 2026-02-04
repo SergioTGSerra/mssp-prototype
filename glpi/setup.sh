@@ -39,7 +39,7 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
         echo "Warning: Failed to activate SAML plugin."
     }
     
-    # Create Keycloak SAML client for GLPI
+# Create Keycloak SAML client for GLPI
     echo "Creating Keycloak SAML client for GLPI..."
     GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
     if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields clientId 2>/dev/null | grep -q "${GLPI_CLIENT_ID}"; then
@@ -87,7 +87,7 @@ $CERT_CONTENT
     podman exec glpi-db mysql -u glpi -pglpi glpi -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
     podman exec -i glpi-db mysql -u glpi -pglpi glpi <<EOF
 INSERT INTO glpi_plugin_samlsso_configs (
-    name, is_active, 
+    name, is_active, enforce_sso,
     idp_entity_id, 
     idp_single_sign_on_service, 
     idp_single_logout_service,
@@ -111,7 +111,7 @@ INSERT INTO glpi_plugin_samlsso_configs (
     security_logoutresponsesigned,
     date_creation, date_mod
 ) VALUES (
-    'Keycloak', 1,
+    'Keycloak', 1, 1,
     'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
     'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
     'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
