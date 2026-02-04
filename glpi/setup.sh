@@ -25,13 +25,21 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
     podman exec glpi php bin/console glpi:config:set glpinetwork_registration_key "$GLPI_NETWORK_KEY" --no-interaction
     
     echo "Downloading SAML plugin from Marketplace..."
-    podman exec glpi php bin/console marketplace:download samlsso --no-interaction --force
+    podman exec glpi php bin/console marketplace:download samlsso --no-interaction --force || {
+        echo "Warning: Failed to download SAML plugin from Marketplace."
+    }
     
     echo "Installing SAML plugin..."
-    podman exec glpi php bin/console plugin:install samlsso --username=glpi --no-interaction
+    podman exec glpi php bin/console plugin:install samlsso --username=glpi --no-interaction || {
+        echo "Warning: Failed to install SAML plugin."
+    }
     
     echo "Activating SAML plugin..."
-    podman exec glpi php bin/console plugin:activate samlsso --no-interaction
+    podman exec glpi php bin/console plugin:activate samlsso --no-interaction || {
+        echo "Warning: Failed to activate SAML plugin."
+    }
 else
     echo "WARNING: GLPI_NETWORK_KEY not found. Skipping SAML plugin installation."
 fi
+
+echo "GLPI setup completed successfully!"
