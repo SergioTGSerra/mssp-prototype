@@ -130,6 +130,12 @@ INSERT INTO glpi_plugin_samlsso_configs (
 EOF
     echo "SAML Plugin configured successfully."
 
+    # Deactivate default "Root" authorization rule and unset default profile
+    # This ensures new users don't get 'Self-Service' in 'Root Entity' by default
+    #podman exec glpi-db mysql -u glpi -pglpi glpi -e "UPDATE glpi_rules SET is_active = 0 WHERE name = 'Root' AND sub_type = 'RuleRight';"
+    echo "Disabling default authorization rules and profiles..."
+    podman exec glpi-db mysql -u glpi -pglpi glpi -e "UPDATE glpi_profiles SET is_default = 0 WHERE name = 'Self-Service';"
+
     # Update Keycloak with SP Certificate for signature verification (Security Best Practice)
     echo "Updating Keycloak with GLPI SP signing certificate..."
     
