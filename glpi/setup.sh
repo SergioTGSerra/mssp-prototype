@@ -79,72 +79,70 @@ $CERT_CONTENT
     echo "Generating SP Certificate and Private Key for GLPI inside container..."
     podman exec glpi openssl req -x509 -newkey rsa:2048 -keyout /tmp/sp_key.pem -out /tmp/sp_cert.pem -days 3650 -nodes -subj "/CN=${GLPI_HOSTNAME}" 2>/dev/null
     
-    # Read content to variables from container (escaping newlines for SQL)
-    SP_CERT=$(podman exec glpi cat /tmp/sp_cert.pem | awk '{printf "%s\\n", $0}')
-    SP_KEY=$(podman exec glpi cat /tmp/sp_key.pem | awk '{printf "%s\\n", $0}')
-    
-    # Clean up temp files in container
-    podman exec glpi rm -f /tmp/sp_cert.pem /tmp/sp_key.pem
+    # Certificate files are read directly in the configuration blocks below
 
-    # Check if configuration already exists
-    COUNT=$(podman exec glpi-db mysql -u glpi -pglpi glpi -N -e "SELECT COUNT(*) FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';")
-    
-    if [ "$COUNT" -eq "0" ]; then
-        # Insert new configuration with all required fields
-        podman exec glpi-db mysql -u glpi -pglpi glpi -e "
-        INSERT INTO glpi_plugin_samlsso_configs (
-            name, is_active, 
-            idp_entity_id, 
-            idp_single_sign_on_service, 
-            idp_single_logout_service,
-            idp_certificate,
-            user_jit,
-            conf_icon,
-            sp_certificate,
-            sp_private_key,
-            sp_nameid_format,
-            requested_authn_context,
-            requested_authn_context_comparison,
-            compress_requests,
-            compress_responses,
-            proxied,
-            strict,
-            validate_xml,
-            security_authnrequestssigned,
-            security_logoutrequestsigned,
-            security_logoutresponsesigned,
-            date_creation, date_mod
-        ) VALUES (
-            'Keycloak', 1,
-            'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
-            'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
-            'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
-            '$KEYCLOAK_CERT',
-            1,
-            'fa-solid fa-key',
-            '$SP_CERT', '$SP_KEY', 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
-            'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport',
-            'exact',
-            1,
-            1, 1, 1, 1,
-            1, 1, 1,
-            NOW(), NOW()
-        );" && echo "SAML Plugin configured successfully." || echo "Error configuring SAML Plugin."
-    fi
+
+    # Insert configuration using heredoc to handle multiline certificates safely
+    echo "Configuring SAML Plugin settings in database (Clean setup)..."
+    podman exec glpi-db mysql -u glpi -pglpi glpi -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
+    podman exec -i glpi-db mysql -u glpi -pglpi glpi <<EOF
+INSERT INTO glpi_plugin_samlsso_configs (
+    name, is_active, 
+    idp_entity_id, 
+    idp_single_sign_on_service, 
+    idp_single_logout_service,
+    idp_certificate,
+    user_jit,
+    conf_icon,
+    sp_certificate,
+    sp_private_key,
+    sp_nameid_format,
+    requested_authn_context,
+    requested_authn_context_comparison,
+    compress_requests,
+    compress_responses,
+    proxied,
+    strict,
+    validate_xml,
+    validate_destination,
+    lowercase_url_encoding,
+    security_authnrequestssigned,
+    security_logoutrequestsigned,
+    security_logoutresponsesigned,
+    date_creation, date_mod
+) VALUES (
+    'Keycloak', 1,
+    'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
+    'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
+    'https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml',
+    '$(echo -e "$KEYCLOAK_CERT")',
+    1,
+    'fa-solid fa-key',
+    '$(podman exec glpi cat /tmp/sp_cert.pem)',
+    '$(podman exec glpi cat /tmp/sp_key.pem)',
+    'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress',
+    'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport',
+    'exact',
+    1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1,
+    NOW(), NOW()
+);
+EOF
+    echo "SAML Plugin configured successfully."
 
     # Update Keycloak with SP Certificate for signature verification (Security Best Practice)
     echo "Updating Keycloak with GLPI SP signing certificate..."
     
     # Strip headers from SP cert for Keycloak config
-    CLEAN_SP_CERT=$(echo "$SP_CERT" | grep -v "BEGIN CERTIFICATE" | grep -v "END CERTIFICATE" | tr -d '\n')
+    CLEAN_SP_CERT=$(podman exec glpi cat /tmp/sp_cert.pem | grep -v "BEGIN CERTIFICATE" | grep -v "END CERTIFICATE" | tr -d '\r\n')
     
     CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes)
     
     if [ ! -z "$CLIENT_UUID" ] && [ ! -z "$CLEAN_SP_CERT" ]; then
-         podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/${CLIENT_UUID} -r netzor \
-            -s 'attributes."saml.client.signature"="false"' \
+         podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/${UUID_PART:-$CLIENT_UUID} -r netzor \
+            -s 'attributes."saml.client.signature"="true"' \
             -s 'attributes."saml.signing.certificate"="'"$CLEAN_SP_CERT"'"' \
-            && echo "Keycloak configured with GLPI signing certificate." || echo "Warning: Failed to update Keycloak with signing certificate."
+            && echo "Keycloak configured with GLPI signing certificate and signature verification ENABLED." || echo "Warning: Failed to update Keycloak with signing certificate."
             
          # Remove role_list scope to prevent duplicate 'Role' attributes error in GLPI
          SCOPE_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get client-scopes -r netzor | jq -r '.[] | select(.name == "role_list") | .id')
