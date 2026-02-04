@@ -59,22 +59,22 @@ if [ -f "./mail/setup.sh" ]; then
     fi
 fi
 
-# 6. Setup Nextcloud
-echo ">> Step 6: Installing Nextcloud..."
-if [ -f "./nextcloud-aio/setup.sh" ]; then
-    ./nextcloud-aio/setup.sh
-    if [ $? -ne 0 ]; then
-        echo "Error: Nextcloud setup failed. Exiting."
-        exit 1
-    fi
-fi
-
-# 7. Setup GLPI
-echo ">> Step 7: Installing GLPI..."
+# 6. Setup GLPI
+echo ">> Step 6: Installing GLPI..."
 if [ -f "./glpi/setup.sh" ]; then
     ./glpi/setup.sh
     if [ $? -ne 0 ]; then
         echo "Error: GLPI setup failed. Exiting."
+        exit 1
+    fi
+fi
+
+# 7. Setup Nextcloud
+echo ">> Step 7: Installing Nextcloud..."
+if [ -f "./nextcloud-aio/setup.sh" ]; then
+    ./nextcloud-aio/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Nextcloud setup failed. Exiting."
         exit 1
     fi
 fi

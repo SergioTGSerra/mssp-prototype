@@ -38,6 +38,26 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
     podman exec glpi php bin/console plugin:activate samlsso --no-interaction || {
         echo "Warning: Failed to activate SAML plugin."
     }
+    
+    # Create Keycloak SAML client for GLPI
+    echo "Creating Keycloak SAML client for GLPI (Hostname: ${GLPI_HOSTNAME})..."
+    GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
+    if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields clientId 2>/dev/null | grep -q "${GLPI_CLIENT_ID}"; then
+        echo "GLPI SAML client already exists."
+    else
+        # Create client in a single command using JSON map for attributes to avoid Keycloak NPE
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor \
+            -s clientId="${GLPI_CLIENT_ID}" \
+            -s name="${GLPI_CLIENT_ID}" \
+            -s enabled=true \
+            -s protocol=saml \
+            -s "rootUrl=https://${GLPI_HOSTNAME}" \
+            -s "baseUrl=https://${GLPI_HOSTNAME}" \
+            -s "redirectUris=[\"https://${GLPI_HOSTNAME}/*\"]" \
+            -s 'attributes={"saml_force_post_binding":"true", "saml_name_id_format":"email", "saml.force.post.binding":"true", "saml.signature.algorithm":"RSA_SHA256"}' \
+            -s frontchannelLogout=true \
+             && echo "GLPI SAML client created successfully." || echo "Warning: Failed to create GLPI SAML client."
+    fi
 else
     echo "WARNING: GLPI_NETWORK_KEY not found. Skipping SAML plugin installation."
 fi
