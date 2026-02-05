@@ -114,7 +114,7 @@ services:
       - iris_frontend
       - waf
     volumes:
-      - "./certificates/web_certificates/:/www/certs/:ro"
+      - "./certificates/web_certificates/:/www/certs/:ro,z"
     restart: always
     depends_on:
       - "app"
