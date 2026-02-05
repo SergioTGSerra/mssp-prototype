@@ -64,9 +64,15 @@ services:
       - POSTGRES_PORT
       - IRIS_SECRET_KEY
       - IRIS_SECURITY_PASSWORD_SALT
+      - OIDC_ISSUER_URL=https://${KEYCLOAK_HOSTNAME}/realms/netzor
+      - OIDC_CLIENT_ID=${IRIS_OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${IRIS_OIDC_CLIENT_SECRET}
+      - OIDC_END_SESSION_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/logout
     networks:
       - iris_backend
       - iris_frontend
+    extra_hosts:
+      - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
   worker:
     image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
@@ -96,8 +102,14 @@ services:
       - IRIS_SECRET_KEY
       - IRIS_SECURITY_PASSWORD_SALT
       - IRIS_WORKER
+      - OIDC_ISSUER_URL=https://${KEYCLOAK_HOSTNAME}/realms/netzor
+      - OIDC_CLIENT_ID=${IRIS_OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${IRIS_OIDC_CLIENT_SECRET}
+      - OIDC_END_SESSION_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/logout
     networks:
       - iris_backend
+    extra_hosts:
+      - "${KEYCLOAK_HOSTNAME}:host-gateway"
 
   nginx:
     image: ${NGINX_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_nginx}:${NGINX_IMAGE_TAG:-v2.4.27}
