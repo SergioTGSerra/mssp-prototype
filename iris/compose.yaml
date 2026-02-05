@@ -24,7 +24,7 @@ services:
       - iris_backend
 
   db:
-    image: ${DB_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_db}:${DB_IMAGE_TAG:-v2.4.20}
+    image: ${DB_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_db}:${DB_IMAGE_TAG:-v2.4.27}
     container_name: iriswebapp_db
     restart: always
     environment:
@@ -39,9 +39,9 @@ services:
       - db_data:/var/lib/postgresql/data
 
   app:
-    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.20}
+    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
     container_name: iriswebapp_app
-    command: ["nohup", "./iris-entrypoint.sh", "iriswebapp"]
+    command: ['nohup', './iris-entrypoint.sh', 'iriswebapp']
     volumes:
       - ./certificates/rootCA/irisRootCACert.pem:/etc/irisRootCACert.pem:ro
       - ./certificates/:/home/iris/certificates/:ro
@@ -56,7 +56,6 @@ services:
     env_file:
       - .env
     environment:
-      - LOG_LEVEL
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_ADMIN_USER
@@ -70,16 +69,10 @@ services:
       - iris_frontend
 
   worker:
-    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.20}
+    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
     container_name: iriswebapp_worker
     restart: always
-    command:
-      [
-        "./wait-for-iriswebapp.sh",
-        "app:8000",
-        "./iris-entrypoint.sh",
-        "iris-worker",
-      ]
+    command: ['./wait-for-iriswebapp.sh', 'app:8000', './iris-entrypoint.sh', 'iris-worker']
     volumes:
       - ./certificates/rootCA/irisRootCACert.pem:/etc/irisRootCACert.pem:ro
       - ./certificates/:/home/iris/certificates/:ro
@@ -103,18 +96,15 @@ services:
       - IRIS_SECRET_KEY
       - IRIS_SECURITY_PASSWORD_SALT
       - IRIS_WORKER
-      - LOG_LEVEL
     networks:
       - iris_backend
 
   nginx:
-    image: ${NGINX_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_nginx}:${NGINX_IMAGE_TAG:-v2.4.20}
+    image: ${NGINX_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_nginx}:${NGINX_IMAGE_TAG:-v2.4.27}
     container_name: iriswebapp_nginx
     environment:
       - IRIS_UPSTREAM_SERVER
       - IRIS_UPSTREAM_PORT
-      - IRIS_FRONTEND_SERVER
-      - IRIS_FRONTEND_PORT
       - INTERFACE_HTTPS_PORT
       - SERVER_NAME
       - CERT_FILENAME

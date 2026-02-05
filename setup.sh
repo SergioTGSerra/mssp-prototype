@@ -69,8 +69,18 @@ if [ -f "./glpi/setup.sh" ]; then
     fi
 fi
 
-# 7. Setup Nextcloud
-echo ">> Step 7: Installing Nextcloud..."
+# 7. Setup IRIS
+echo ">> Step 7: Installing IRIS..."
+if [ -f "./iris/setup.sh" ]; then
+    ./iris/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: IRIS setup failed. Exiting."
+        exit 1
+    fi
+fi
+
+# 8. Setup Nextcloud
+echo ">> Step 8: Installing Nextcloud..."
 if [ -f "./nextcloud-aio/setup.sh" ]; then
     ./nextcloud-aio/setup.sh
     if [ $? -ne 0 ]; then
@@ -79,15 +89,7 @@ if [ -f "./nextcloud-aio/setup.sh" ]; then
     fi
 fi
 
-# # 8. Setup IRIS
-# echo ">> Step 8: Installing IRIS..."
-# if [ -f "./iris/setup.sh" ]; then
-#     ./iris/setup.sh
-#     if [ $? -ne 0 ]; then
-#         echo "Error: IRIS setup failed. Exiting."
-#         exit 1
-#     fi
-# fi
+
 
 # # 9. Setup Guacamole
 # echo ">> Step 9: Installing Guacamole..."
