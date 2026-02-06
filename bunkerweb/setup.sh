@@ -55,5 +55,5 @@ else
     -e MULTISITE=yes \
     -e SERVER_NAME="${SERVER_NAMES[*]}" \
     "${BUNKER_ENV[@]}" \
-    docker.io/bunkerity/bunkerweb-all-in-one:1.6.7
+    docker.io/bunkerity/bunkerweb-all-in-one:1.6.8
 fi
