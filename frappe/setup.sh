@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd $PWD/erpnext
+cd $PWD/frappe
 
 #Load env
 set -a; source .env; set +a

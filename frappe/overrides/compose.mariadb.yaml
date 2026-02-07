@@ -8,7 +8,7 @@ services:
         condition: service_healthy
 
   db:
-    container_name: erpnext-db
+    container_name: frappe-db
     image: mariadb:11.8
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
@@ -28,7 +28,7 @@ services:
     volumes:
       - db-data:/var/lib/mysql
     networks:
-      - erpnext-network
+      - frappe-network
 
 volumes:
   db-data:

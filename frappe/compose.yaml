@@ -19,7 +19,7 @@ x-backend-defaults: &backend_defaults
 services:
   configurator:
     <<: *backend_defaults
-    container_name: erpnext-configurator
+    container_name: frappe-configurator
     platform: linux/amd64
     entrypoint:
       - bash
@@ -43,18 +43,18 @@ services:
     depends_on: {}
     restart: on-failure
     networks:
-      - erpnext-network
+      - frappe-network
 
   backend:
     <<: *backend_defaults
-    container_name: erpnext-backend
+    container_name: frappe-backend
     platform: linux/amd64
     networks:
-      - erpnext-network
+      - frappe-network
 
   frontend:
     <<: *customizable_image
-    container_name: erpnext-frontend
+    container_name: frappe-frontend
     platform: linux/amd64
     command:
       - nginx-entrypoint.sh
@@ -70,7 +70,7 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
     networks:
-      - erpnext-network
+      - frappe-network
       - waf
     depends_on:
       - backend
@@ -78,7 +78,7 @@ services:
 
   websocket:
     <<: [*depends_on_configurator, *customizable_image]
-    container_name: erpnext-websocket
+    container_name: frappe-websocket
     platform: linux/amd64
     command:
       - node
@@ -86,39 +86,39 @@ services:
     volumes:
       - sites:/home/frappe/frappe-bench/sites
     networks:
-      - erpnext-network
+      - frappe-network
 
   queue-short:
     <<: *backend_defaults
-    container_name: erpnext-queue-short
+    container_name: frappe-queue-short
     platform: linux/amd64
     command: bench worker --queue short,default
     networks:
-      - erpnext-network
+      - frappe-network
 
   queue-long:
     <<: *backend_defaults
-    container_name: erpnext-queue-long
+    container_name: frappe-queue-long
     platform: linux/amd64
     command: bench worker --queue long,default,short
     networks:
-      - erpnext-network
+      - frappe-network
 
   scheduler:
     <<: *backend_defaults
-    container_name: erpnext-scheduler
+    container_name: frappe-scheduler
     platform: linux/amd64
     command: bench schedule
     networks:
-      - erpnext-network
+      - frappe-network
 
 # ERPNext requires local assets access (Frappe does not)
 volumes:
   sites:
 
 networks:
-  erpnext-network:
-    name: erpnext-network
+  frappe-network:
+    name: frappe-network
     driver: bridge
   waf:
     external: true

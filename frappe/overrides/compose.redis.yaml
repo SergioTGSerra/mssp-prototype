@@ -8,20 +8,20 @@ services:
       - redis-queue
 
   redis-cache:
-    container_name: erpnext-redis-cache
+    container_name: frappe-redis-cache
     image: redis:6.2-alpine
     restart: unless-stopped
     networks:
-      - erpnext-network
+      - frappe-network
 
   redis-queue:
-    container_name: erpnext-redis-queue
+    container_name: frappe-redis-queue
     image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
       - redis-queue-data:/data
     networks:
-      - erpnext-network
+      - frappe-network
 
 volumes:
   redis-queue-data:

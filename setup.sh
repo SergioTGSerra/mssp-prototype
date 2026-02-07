@@ -59,12 +59,12 @@ if [ -f "./mail/setup.sh" ]; then
     fi
 fi
 
-# 6. Setup ERPNext
-echo ">> Step 6: Installing ERPNext..."
-if [ -f "./erpnext/setup.sh" ]; then
-    ./erpnext/setup.sh
+# 6. Setup Frappe
+echo ">> Step 6: Installing Frappe..."
+if [ -f "./frappe/setup.sh" ]; then
+    ./frappe/setup.sh
     if [ $? -ne 0 ]; then
-        echo "Error: ERPNext setup failed. Exiting."
+        echo "Error: Frappe setup failed. Exiting."
         exit 1
     fi
 fi
