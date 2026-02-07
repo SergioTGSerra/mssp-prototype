@@ -10,12 +10,16 @@ services:
   redis-cache:
     image: redis:6.2-alpine
     restart: unless-stopped
+    networks:
+      - erpnext-network
 
   redis-queue:
     image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
       - redis-queue-data:/data
+    networks:
+      - erpnext-network
 
 volumes:
   redis-queue-data:

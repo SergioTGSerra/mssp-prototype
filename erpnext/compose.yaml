@@ -3,7 +3,7 @@ x-customizable-image: &customizable_image
   # See https://github.com/frappe/frappe_docker/blob/main/docs/container-setup/02-build-setup.md#define-custom-apps
   # about using custom images.
   image: frappe/erpnext:${ERPNEXT_VERSION}
-  pull_policy: ${PULL_POLICY:-always}
+  pull_policy: ${PULL_POLICY:-missing}
   restart: ${RESTART_POLICY:-unless-stopped}
 
 x-depends-on-configurator: &depends_on_configurator
@@ -41,10 +41,14 @@ services:
       SOCKETIO_PORT: 9000
     depends_on: {}
     restart: on-failure
+    networks:
+      - erpnext-network
 
   backend:
     <<: *backend_defaults
     platform: linux/amd64
+    networks:
+      - erpnext-network
 
   frontend:
     <<: *customizable_image
@@ -62,6 +66,9 @@ services:
       CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-50m}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
+    networks:
+      - erpnext-network
+      - waf
     depends_on:
       - backend
       - websocket
@@ -74,22 +81,37 @@ services:
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
       - sites:/home/frappe/frappe-bench/sites
+    networks:
+      - erpnext-network
 
   queue-short:
     <<: *backend_defaults
     platform: linux/amd64
     command: bench worker --queue short,default
+    networks:
+      - erpnext-network
 
   queue-long:
     <<: *backend_defaults
     platform: linux/amd64
     command: bench worker --queue long,default,short
+    networks:
+      - erpnext-network
 
   scheduler:
     <<: *backend_defaults
     platform: linux/amd64
     command: bench schedule
+    networks:
+      - erpnext-network
 
 # ERPNext requires local assets access (Frappe does not)
 volumes:
   sites:
+
+networks:
+  erpnext-network:
+    name: erpnext-network
+    driver: bridge
+  waf:
+    external: true
