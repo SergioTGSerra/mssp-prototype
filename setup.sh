@@ -59,8 +59,18 @@ if [ -f "./mail/setup.sh" ]; then
     fi
 fi
 
-# 6. Setup GLPI
-echo ">> Step 6: Installing GLPI..."
+# 6. Setup ERPNext
+echo ">> Step 6: Installing ERPNext..."
+if [ -f "./erpnext/setup.sh" ]; then
+    ./erpnext/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: ERPNext setup failed. Exiting."
+        exit 1
+    fi
+fi
+
+# 7. Setup GLPI
+echo ">> Step 7: Installing GLPI..."
 if [ -f "./glpi/setup.sh" ]; then
     ./glpi/setup.sh
     if [ $? -ne 0 ]; then
@@ -69,8 +79,8 @@ if [ -f "./glpi/setup.sh" ]; then
     fi
 fi
 
-# 7. Setup IRIS
-echo ">> Step 7: Installing IRIS..."
+# 8. Setup IRIS
+echo ">> Step 8: Installing IRIS..."
 if [ -f "./iris/setup.sh" ]; then
     ./iris/setup.sh
     if [ $? -ne 0 ]; then
@@ -79,8 +89,8 @@ if [ -f "./iris/setup.sh" ]; then
     fi
 fi
 
-# 8. Setup Guacamole
-echo ">> Step 8: Installing Guacamole..."
+# 9. Setup Guacamole
+echo ">> Step 9: Installing Guacamole..."
 if [ -f "./guacamole/setup.sh" ]; then
     ./guacamole/setup.sh
     if [ $? -ne 0 ]; then
@@ -90,8 +100,8 @@ if [ -f "./guacamole/setup.sh" ]; then
 fi
 
 
-# 9. Setup Nextcloud
-echo ">> Step 9: Installing Nextcloud..."
+# 10. Setup Nextcloud
+echo ">> Step 10: Installing Nextcloud..."
 if [ -f "./nextcloud-aio/setup.sh" ]; then
     ./nextcloud-aio/setup.sh
     if [ $? -ne 0 ]; then
