@@ -8,12 +8,14 @@ services:
       - redis-queue
 
   redis-cache:
+    container_name: erpnext-redis-cache
     image: redis:6.2-alpine
     restart: unless-stopped
     networks:
       - erpnext-network
 
   redis-queue:
+    container_name: erpnext-redis-queue
     image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
