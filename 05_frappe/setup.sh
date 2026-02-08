@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-cd $PWD/frappe
+cd "$(dirname "$0")"
 
 #Load env
 set -a; source .env; set +a

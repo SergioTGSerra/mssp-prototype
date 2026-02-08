@@ -4,7 +4,8 @@
 set -a; source .env; set +a
 
 
-podman-compose -f $PWD/nextcloud-aio/compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
+cd "$(dirname "$0")"
+podman-compose -f compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
 
 # 5. Configure Maintenance Window (4 AM to 8 AM)
 #podman exec -u www-data nextcloud php occ config:system:set maintenance_window_start --value=4 --type=integer
@@ -83,7 +84,7 @@ podman exec -u www-data nextcloud-aio-nextcloud php occ config:app:set user_oidc
 
 # Install mail_oidc_bridge app
 echo ">> Installing mail_oidc_bridge app..."
-podman cp $PWD/nextcloud-aio/apps/mail_oidc_bridge nextcloud-aio-nextcloud:/var/www/html/custom_apps/
+podman cp apps/mail_oidc_bridge nextcloud-aio-nextcloud:/var/www/html/custom_apps/
 podman exec nextcloud-aio-nextcloud chown -R www-data:www-data /var/www/html/custom_apps/mail_oidc_bridge
 podman exec -u www-data nextcloud-aio-nextcloud php occ app:enable mail_oidc_bridge
 

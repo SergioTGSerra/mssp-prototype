@@ -3,7 +3,8 @@
 # Load env
 set -a; source .env; set +a
 
-podman-compose -f $PWD/iris/compose.yaml up -d
+cd "$(dirname "$0")"
+podman-compose -f compose.yaml up -d
 
 # Create IRIS OIDC client
 echo ">> Creating IRIS OIDC client..."

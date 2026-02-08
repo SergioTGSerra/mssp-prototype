@@ -3,7 +3,8 @@
 #Load env
 set -a; source .env; set +a
 
-podman-compose -f $PWD/glpi/compose.yaml up -d
+cd "$(dirname "$0")"
+podman-compose -f compose.yaml up -d
 
 # Wait for GLPI to be ready
 MAX_RETRIES=30

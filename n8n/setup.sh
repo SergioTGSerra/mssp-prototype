@@ -1,3 +1,4 @@
 #!/bin/bash
 
-podman-compose -f $PWD/n8n/compose.yaml up -d
+cd "$(dirname "$0")"
+podman-compose -f compose.yaml up -d
