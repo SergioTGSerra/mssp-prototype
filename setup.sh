@@ -89,17 +89,8 @@ if [ -f "./iris/setup.sh" ]; then
     fi
 fi
 
-# 9. Setup Guacamole
-echo ">> Step 9: Installing Guacamole..."
-if [ -f "./guacamole/setup.sh" ]; then
-    ./guacamole/setup.sh
-    if [ $? -ne 0 ]; then
-        echo "Error: Guacamole setup failed. Exiting."
-        exit 1
-    fi
-fi
-
-# 10. Setup Jumpserver
+# 9. Setup Jumpserver
+echo ">> Step 9: Installing Jumpserver..."
 if [ -f "./jumpserver/setup.sh" ]; then
     ./jumpserver/setup.sh
     if [ $? -ne 0 ]; then
@@ -108,8 +99,8 @@ if [ -f "./jumpserver/setup.sh" ]; then
     fi
 fi
 
-# 11. Setup Nextcloud
-echo ">> Step 11: Installing Nextcloud..."
+# 10. Setup Nextcloud
+echo ">> Step 10: Installing Nextcloud..."
 if [ -f "./nextcloud-aio/setup.sh" ]; then
     ./nextcloud-aio/setup.sh
     if [ $? -ne 0 ]; then
