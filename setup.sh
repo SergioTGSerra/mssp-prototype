@@ -99,9 +99,17 @@ if [ -f "./guacamole/setup.sh" ]; then
     fi
 fi
 
+# 10. Setup Jumpserver
+if [ -f "./jumpserver/setup.sh" ]; then
+    ./jumpserver/setup.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Jumpserver setup failed. Exiting."
+        exit 1
+    fi
+fi
 
-# 10. Setup Nextcloud
-echo ">> Step 10: Installing Nextcloud..."
+# 11. Setup Nextcloud
+echo ">> Step 11: Installing Nextcloud..."
 if [ -f "./nextcloud-aio/setup.sh" ]; then
     ./nextcloud-aio/setup.sh
     if [ $? -ne 0 ]; then
