@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+#Load env
+set -a; source .env; set +a
+
 # Add keycloak-bind system user to FreeIPA
 echo "Configuring FreeIPA Bind User..."
 podman exec freeipa bash -c "

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+#Load env
+set -a; source .env; set +a
+
 # Criar network se não existir
 podman network exists ipa || podman network create ipa
 
@@ -11,6 +14,7 @@ podman run --name freeipa -d \
     --network=ipa \
     --restart=always \
     -h ${FREEIPA_HOSTNAME} --read-only \
+    --tmpfs /run --tmpfs /tmp \
     -v freeipa:/data:Z \
     -p 389:389 -p 636:636 \
     -p 88:88 -p 464:464 \
