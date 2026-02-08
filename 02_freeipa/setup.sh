@@ -21,7 +21,7 @@ podman run --name freeipa -d \
     --health-retries=5 \
     --health-timeout=30s \
     --health-start-period=600s \
-    quay.io/freeipa/freeipa-server:rocky-9 \
+    quay.io/freeipa/freeipa-server:almalinux-10 \
     ipa-server-install -U \
     --realm=${FREEIPA_REALM} \
     --admin-password=${FREEIPA_ADMIN_PASSWORD} \
