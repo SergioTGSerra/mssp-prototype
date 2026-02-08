@@ -9,5 +9,4 @@ BUNKER_ENV+=(
     -e "${HOST}_SECURITY_MODE=detect"
     # Allow access to the UI from anywhere (can be restricted later if needed)
     -e "${HOST}_USE_WHITELIST=no"
-    -e "${HOST}_USE_LETS_ENCRYPT=yes"
 )

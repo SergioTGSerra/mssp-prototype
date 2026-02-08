@@ -7,5 +7,4 @@ BUNKER_ENV+=(
     -e "${HOST}_SECURITY_MODE=detect"
     # Desativar modificação de cookies para aplicações que gerem os seus próprios cookies
     -e "${HOST}_COOKIE_FLAGS="
-    -e "${HOST}_USE_LETS_ENCRYPT=yes"
 )

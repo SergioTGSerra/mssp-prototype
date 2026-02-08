@@ -39,5 +39,4 @@ BUNKER_ENV+=(
     
     # ModSecurity CRS plugin for Nextcloud
     -e "${HOST}_MODSECURITY_CRS_PLUGINS=nextcloud-rule-exclusions"
-    -e "${HOST}_USE_LETS_ENCRYPT=yes"
 )

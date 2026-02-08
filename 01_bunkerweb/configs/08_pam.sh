@@ -7,5 +7,4 @@ BUNKER_ENV+=(
     -e "${HOST}_USE_PROXY_WEBSOCKET=yes"
     -e "${HOST}_COOKIE_FLAGS="
     -e "${HOST}_SECURITY_MODE=detect"
-    -e "${HOST}_USE_LETS_ENCRYPT=yes"
 )

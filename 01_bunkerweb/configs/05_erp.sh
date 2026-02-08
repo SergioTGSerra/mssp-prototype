@@ -6,5 +6,4 @@ BUNKER_ENV+=(
     -e "${HOST}_REVERSE_PROXY_HOST=http://frappe-frontend:8080"
     -e "${HOST}_SECURITY_MODE=detect"
     -e "${HOST}_COOKIE_FLAGS="
-    -e "${HOST}_USE_LETS_ENCRYPT=yes"
 )
