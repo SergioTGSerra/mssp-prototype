@@ -4,11 +4,6 @@
 source ./utils.sh
 set -a; source .env; set +a
 
-# Prompt for domain (only user input required)
-read -p "Enter your domain [${DOMAIN}]: " USER_DOMAIN
-DOMAIN=${USER_DOMAIN:-$DOMAIN}
-update_or_create_env DOMAIN "${DOMAIN}"
-
 # 1. Setup Prerequisites (OpenSSL, Podman)
 echo ">> Step 1: Checking/Installing Prerequisites..."
 if [ -f "./prerequisites.sh" ]; then
