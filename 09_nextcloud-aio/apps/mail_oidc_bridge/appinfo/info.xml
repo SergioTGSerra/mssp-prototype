@@ -23,6 +23,6 @@ Requirements:
     <namespace>MailOidcBridge</namespace>
     <category>integration</category>
     <dependencies>
-        <nextcloud min-version="31.0.12" max-version="32.0.3"/>
+        <nextcloud min-version="31.0.12" max-version="32.0.5"/>
     </dependencies>
 </info>

@@ -17,7 +17,7 @@ services:
       nextcloud-aio-nextcloud:
         condition: service_started
         required: false
-    image: ghcr.io/nextcloud-releases/aio-apache:latest
+    image: ghcr.io/nextcloud-releases/aio-apache:20260122_105751
     user: "33"
     init: true
     healthcheck:
@@ -62,7 +62,7 @@ services:
 
   nextcloud-aio-database:
     container_name: nextcloud-aio-database
-    image: ghcr.io/nextcloud-releases/aio-postgresql:latest
+    image: ghcr.io/nextcloud-releases/aio-postgresql:20260122_105751
     user: "999"
     init: true
     healthcheck:
@@ -112,7 +112,7 @@ services:
       nextcloud-aio-imaginary:
         condition: service_started
         required: false
-    image: ghcr.io/nextcloud-releases/aio-nextcloud:latest
+    image: ghcr.io/nextcloud-releases/aio-nextcloud:20260122_105751
     init: true
     healthcheck:
       start_period: 0s
@@ -197,7 +197,7 @@ services:
 
   nextcloud-aio-notify-push:
     container_name: nextcloud-aio-notify-push
-    image: ghcr.io/nextcloud-releases/aio-notify-push:latest
+    image: ghcr.io/nextcloud-releases/aio-notify-push:20260122_105751
     user: "33"
     init: true
     healthcheck:
@@ -232,7 +232,7 @@ services:
 
   nextcloud-aio-redis:
     container_name: nextcloud-aio-redis
-    image: ghcr.io/nextcloud-releases/aio-redis:latest
+    image: ghcr.io/nextcloud-releases/aio-redis:20260122_105751
     user: "999"
     init: true
     healthcheck:
@@ -259,7 +259,7 @@ services:
   nextcloud-aio-collabora:
     container_name: nextcloud-aio-collabora
     command: ${ADDITIONAL_COLLABORA_OPTIONS}
-    image: ghcr.io/nextcloud-releases/aio-collabora:latest
+    image: ghcr.io/nextcloud-releases/aio-collabora:20260122_105751
     init: true
     healthcheck:
       start_period: 60s
@@ -293,7 +293,7 @@ services:
 
   nextcloud-aio-talk:
     container_name: nextcloud-aio-talk
-    image: ghcr.io/nextcloud-releases/aio-talk:latest
+    image: ghcr.io/nextcloud-releases/aio-talk:20260122_105751
     user: "1000"
     init: true
     healthcheck:
@@ -334,7 +334,7 @@ services:
 
   nextcloud-aio-talk-recording:
     container_name: nextcloud-aio-talk-recording
-    image: ghcr.io/nextcloud-releases/aio-talk-recording:latest
+    image: ghcr.io/nextcloud-releases/aio-talk-recording:20260122_105751
     user: "122"
     init: true
     healthcheck:
@@ -367,7 +367,7 @@ services:
 
   nextcloud-aio-clamav:
     container_name: nextcloud-aio-clamav
-    image: ghcr.io/nextcloud-releases/aio-clamav:latest
+    image: ghcr.io/nextcloud-releases/aio-clamav:20260122_105751
     user: "100"
     init: false
     healthcheck:
@@ -401,7 +401,7 @@ services:
 
   nextcloud-aio-onlyoffice:
     container_name: nextcloud-aio-onlyoffice
-    image: ghcr.io/nextcloud-releases/aio-onlyoffice:latest
+    image: ghcr.io/nextcloud-releases/aio-onlyoffice:20260122_105751
     init: true
     healthcheck:
       start_period: 60s
@@ -429,7 +429,7 @@ services:
 
   nextcloud-aio-imaginary:
     container_name: nextcloud-aio-imaginary
-    image: ghcr.io/nextcloud-releases/aio-imaginary:latest
+    image: ghcr.io/nextcloud-releases/aio-imaginary:20260122_105751
     user: "65534"
     init: true
     healthcheck:
@@ -459,7 +459,7 @@ services:
 
   nextcloud-aio-fulltextsearch:
     container_name: nextcloud-aio-fulltextsearch
-    image: ghcr.io/nextcloud-releases/aio-fulltextsearch:latest
+    image: ghcr.io/nextcloud-releases/aio-fulltextsearch:20260122_105751
     init: false
     healthcheck:
       start_period: 60s
@@ -493,7 +493,7 @@ services:
 
   nextcloud-aio-whiteboard:
     container_name: nextcloud-aio-whiteboard
-    image: ghcr.io/nextcloud-releases/aio-whiteboard:latest
+    image: ghcr.io/nextcloud-releases/aio-whiteboard:20260122_105751
     user: "65534"
     init: true
     healthcheck:
