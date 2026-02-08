@@ -4,7 +4,8 @@
 set -a; source .env; set +a
 
 cd "$(dirname "$0")"
-podman-compose -f compose.yaml up -d
+PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
+podman-compose -p "$PROJECT_NAME" -f compose.yaml up -d
 
 # Wait for GLPI to be ready
 MAX_RETRIES=30
