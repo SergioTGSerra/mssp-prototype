@@ -9,7 +9,7 @@ services:
 
   db:
     container_name: frappe-db
-    image: mariadb:11.8
+    image: docker.io/library/mariadb:11.8
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 5s
