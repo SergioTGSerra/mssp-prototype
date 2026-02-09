@@ -20,7 +20,7 @@ else
      -v jsdata:/opt/data \
      -v pgdata:/var/lib/postgresql \
      -p 2222:2222 \
-     jumpserver/jms_all
+     docker.io/jumpserver/jms_all:v4.10.15
 
   podman network connect waf jms_all
 fi
