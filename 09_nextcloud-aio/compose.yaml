@@ -126,7 +126,6 @@ services:
       - "9001"
     networks:
       - nextcloud-network
-      - mail-network
     volumes:
       - nextcloud-aio-nextcloud-files:/var/www/html:rw
       - ${NEXTCLOUD_DATADIR}:/mnt/ncdata:rw
@@ -194,6 +193,7 @@ services:
       - NET_RAW
     extra_hosts:
       - "${KEYCLOAK_HOSTNAME}:host-gateway"
+      - "${MAILSERVER_HOSTNAME}:host-gateway"
 
   nextcloud-aio-notify-push:
     container_name: nextcloud-aio-notify-push
@@ -530,8 +530,6 @@ networks:
     name: nextcloud-network
     driver: bridge
   waf:
-    external: true
-  mail-network:
     external: true
 
 volumes:

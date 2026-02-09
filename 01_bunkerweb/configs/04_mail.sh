@@ -1,8 +1,8 @@
-HOST=$ROUNDCUBE_HOSTNAME
+HOST=$MAILSERVER_HOSTNAME
 SERVER_NAMES+=("$HOST")
 
 BUNKER_ENV+=(
     -e "${HOST}_USE_REVERSE_PROXY=yes"
-    -e "${HOST}_REVERSE_PROXY_HOST=http://roundcube"
+    -e "${HOST}_REVERSE_PROXY_HOST=https://mailserver"
     -e "${HOST}_SECURITY_MODE=detect"
 )
