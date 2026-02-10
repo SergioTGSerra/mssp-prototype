@@ -69,20 +69,20 @@ else
         # We append to the config file inside the container
         podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml << 'OIDCEOF'
 
-    [directory.\"keycloak\"]
-    type = \"oidc\"
-    timeout = \"5s\"
-    endpoint.url = \"https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo\"
-    endpoint.method = \"userinfo\"
-    fields.email = \"email\"
-    fields.username = \"preferred_username\"
-    fields.full-name = \"name\"
+[directory.\"keycloak\"]
+type = \"oidc\"
+timeout = \"5s\"
+endpoint.url = \"https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo\"
+endpoint.method = \"userinfo\"
+fields.email = \"email\"
+fields.username = \"preferred_username\"
+fields.full-name = \"name\"
 
-    [directory.\"keycloak\".tls]
-    implicit = true
-    allow-invalid-certs = false
-    OIDCEOF
-    "
+[directory.\"keycloak\".tls]
+implicit = true
+allow-invalid-certs = false
+OIDCEOF
+"
         
         echo "Restarting Stalwart to apply changes..."
         podman restart mailserver
