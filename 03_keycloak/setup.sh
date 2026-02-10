@@ -28,7 +28,7 @@ podman exec freeipa bash -c "
 echo "Starting Keycloak..."
 cd "$(dirname "$0")"
 PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
-podman-compose -p "$PROJECT_NAME" -f compose.yaml up -d
+podman compose -p "$PROJECT_NAME" -f compose.yaml up -d
 
 # Wait for Keycloak to be ready
 MAX_RETRIES=60

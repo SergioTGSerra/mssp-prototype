@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
 set -a; source .env; set +a
 
 PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
-podman-compose -p "$PROJECT_NAME" --env-file .env \
+podman compose -p "$PROJECT_NAME" --env-file .env \
     -f compose.yaml \
     -f overrides/compose.mariadb.yaml \
     -f overrides/compose.redis.yaml \
