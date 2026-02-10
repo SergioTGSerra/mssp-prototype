@@ -15,6 +15,11 @@ x-backend-defaults: &backend_defaults
   <<: [*depends_on_configurator, *customizable_image]
   volumes:
     - sites:/home/frappe/frappe-bench/sites
+    - assets:/home/frappe/frappe-bench/sites/assets
+    - type: tmpfs
+      target: /home/frappe/frappe-bench/logs
+      tmpfs:
+        mode: 1777
 
 services:
   configurator:
@@ -69,6 +74,11 @@ services:
       CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-50m}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
+      - assets:/home/frappe/frappe-bench/sites/assets
+      - type: tmpfs
+        target: /home/frappe/frappe-bench/logs
+        tmpfs:
+          mode: 1777
     networks:
       - frappe-network
       - waf
@@ -85,6 +95,11 @@ services:
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
       - sites:/home/frappe/frappe-bench/sites
+      - assets:/home/frappe/frappe-bench/sites/assets
+      - type: tmpfs
+        target: /home/frappe/frappe-bench/logs
+        tmpfs:
+          mode: 1777
     networks:
       - frappe-network
 
@@ -115,6 +130,7 @@ services:
 # ERPNext requires local assets access (Frappe does not)
 volumes:
   sites:
+  assets:
 
 networks:
   frappe-network:

@@ -11,6 +11,11 @@ services:
     container_name: frappe-redis-cache
     image: docker.io/library/redis:6.2-alpine
     restart: unless-stopped
+    volumes:
+      - type: tmpfs
+        target: /data
+        tmpfs:
+          mode: 1777
     networks:
       - frappe-network
 
