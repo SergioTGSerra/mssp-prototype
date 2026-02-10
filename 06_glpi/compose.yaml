@@ -24,19 +24,19 @@ services:
         condition: service_healthy
 
   glpi-db:
-    image: docker.io/library/mysql:8.4
+    image: mariadb:12.1
     container_name: glpi-db
     networks:
       - glpi
     volumes:
       - glpi-db:/var/lib/mysql
     environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_DATABASE=${GLPI_DB_NAME}
-      - MYSQL_USER=${GLPI_DB_USER}
-      - MYSQL_PASSWORD=${GLPI_DB_PASSWORD}
+      - MARIADB_RANDOM_ROOT_PASSWORD=yes
+      - MARIADB_DATABASE=${GLPI_DB_NAME}
+      - MARIADB_USER=${GLPI_DB_USER}
+      - MARIADB_PASSWORD=${GLPI_DB_PASSWORD}
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-u', '$MYSQL_USER', '--password=$MYSQL_PASSWORD']
+      test: ['CMD', 'mariadb-admin', 'ping', '-h', '127.0.0.1', '-u', '$MARIADB_USER', '--password=$MARIADB_PASSWORD']
       interval: 5s
       retries: 10
       start_period: 5s

@@ -86,8 +86,8 @@ $CERT_CONTENT
 
     # Insert configuration using heredoc to handle multiline certificates safely
     echo "Configuring SAML Plugin settings in database (Clean setup)..."
-    podman exec glpi-db mysql -u glpi -pglpi glpi -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
-    podman exec -i glpi-db mysql -u glpi -pglpi glpi <<EOF
+    podman exec glpi-db mariadb -u glpi -pglpi glpi -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
+    podman exec -i glpi-db mariadb -u glpi -pglpi glpi <<EOF
 INSERT INTO glpi_plugin_samlsso_configs (
     name, is_active, enforce_sso,
     idp_entity_id, 
@@ -136,7 +136,7 @@ EOF
     # This ensures new users don't get 'Self-Service' in 'Root Entity' by default
     #podman exec glpi-db mysql -u glpi -pglpi glpi -e "UPDATE glpi_rules SET is_active = 0 WHERE name = 'Root' AND sub_type = 'RuleRight';"
     echo "Disabling default authorization rules and profiles..."
-    podman exec glpi-db mysql -u glpi -pglpi glpi -e "UPDATE glpi_profiles SET is_default = 0 WHERE name = 'Self-Service';"
+    podman exec glpi-db mariadb -u glpi -pglpi glpi -e "UPDATE glpi_profiles SET is_default = 0 WHERE name = 'Self-Service';"
 
     # Update Keycloak with SP Certificate for signature verification (Security Best Practice)
     echo "Updating Keycloak with GLPI SP signing certificate..."
