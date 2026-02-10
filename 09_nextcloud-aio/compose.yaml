@@ -418,6 +418,13 @@ services:
       - JWT_SECRET=${ONLYOFFICE_SECRET}
     volumes:
       - nextcloud-aio-onlyoffice-data:/var/lib/onlyoffice:rw
+    tmpfs:
+      - /usr/share/fonts/truetype/custom
+      - /var/lib/postgresql
+      - /var/lib/rabbitmq
+      - /var/lib/redis
+      - /var/log/onlyoffice
+      - /var/www/onlyoffice/Data
     restart: unless-stopped
     profiles:
       - onlyoffice
