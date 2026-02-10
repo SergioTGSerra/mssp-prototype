@@ -39,7 +39,6 @@ podman run -d -t \
     -p 25:25 -p 587:587 -p 465:465 \
     -p 143:143 -p 993:993 -p 4190:4190 \
     -p 110:110 -p 995:995 \
-    -p 8080:8080 \
     -v stalwart:/opt/stalwart \
     --add-host "${KEYCLOAK_HOSTNAME}:host-gateway" \
     --name mailserver docker.io/stalwartlabs/stalwart:v0.15.4-alpine
