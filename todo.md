@@ -10,6 +10,8 @@
 - [x] IRIS (DFIR)
 - [x] n8n (Automation)
 - [x] Guacamole (Remote Access)
+- [x] JumpServer (PAM)
+- [x] ERPNext (ERP)
 
 ---
 
@@ -27,12 +29,6 @@
   - Templates para serviços existentes
   - Alertas para n8n
 
-### Acesso Remoto (PAM)
-- [ ] **JumpServer** - Privileged Access Management
-  - Substituir/complementar Guacamole
-  - SSO OIDC com Keycloak
-  - Gravação de sessões
-  - Aprovações just-in-time
 
 ### SOAR / Threat Intelligence
 - [ ] **Shuffle SOAR** - Security Orchestration
@@ -45,11 +41,11 @@
   - Integração com Wazuh
   - Partilha com comunidade
 
-### ERP
-- [ ] **ERPNext** - Enterprise Resource Planning
-  - SSO OIDC com Keycloak
-  - Módulos: HR, Inventory, Accounting
-  - Integração com GLPI
+
+### Outros / Documentação
+- [ ] **BookStack** - Wiki / Documentação
+  - Organização de manuais e playbooks
+  - Integração com Keycloak SSO
 
 ---
 
@@ -57,10 +53,9 @@
 
 1. **Wazuh** - Base de segurança/SIEM
 2. **Zabbix** - Monitorização de infraestrutura
-3. **JumpServer** - PAM completo com gravação
-4. **Shuffle SOAR** - Automação de resposta
-5. **MISP** - Threat intelligence
-6. **ERPNext** - ERP (se necessário)
+3. **Shuffle SOAR** - Automação de resposta
+4. **MISP** - Threat intelligence
+5. **BookStack** - Documentação
 
 ---
 
