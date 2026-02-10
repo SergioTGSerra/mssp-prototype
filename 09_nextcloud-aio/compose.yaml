@@ -27,9 +27,6 @@ services:
       timeout: 30s
       start_interval: 5s
       retries: 3
-    ports:
-      - ${APACHE_IP_BINDING}:${APACHE_PORT}:${APACHE_PORT}/tcp
-      - ${APACHE_IP_BINDING}:${APACHE_PORT}:${APACHE_PORT}/udp
     networks:
       - nextcloud-network
       - waf
