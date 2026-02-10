@@ -48,15 +48,14 @@ services:
       timeout: 5s
     networks:
       - keycloak-network
-      - ipa
       - waf
+    extra_hosts:
+      - "${IPA_HOSTNAME}:host-gateway"
 
 networks:
   keycloak-network:
     name: keycloak-network
     driver: bridge
-  ipa:
-    external: true
   waf:
     external: true
 
