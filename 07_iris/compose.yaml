@@ -22,6 +22,9 @@ services:
     restart: always
     networks:
       - iris_backend
+    volumes:
+      - type: tmpfs
+        target: /var/lib/rabbitmq
 
   db:
     image: ${DB_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_db}:${DB_IMAGE_TAG:-v2.4.27}
