@@ -3,7 +3,7 @@ SERVER_NAMES+=("$HOST")
 
 BUNKER_ENV+=(
     -e "${HOST}_USE_REVERSE_PROXY=yes"
-    -e "${HOST}_REVERSE_PROXY_HOST=http://jms_all:80"
+    -e "${HOST}_REVERSE_PROXY_HOST=http://jumpserver"
     -e "${HOST}_USE_PROXY_WEBSOCKET=yes"
     -e "${HOST}_COOKIE_FLAGS="
     -e "${HOST}_SECURITY_MODE=detect"
