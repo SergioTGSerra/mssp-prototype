@@ -50,7 +50,7 @@ services:
       - keycloak-network
       - waf
     extra_hosts:
-      - "${IPA_HOSTNAME}:host-gateway"
+      - "${FREEIPA_HOSTNAME}:host-gateway"
 
 networks:
   keycloak-network:
