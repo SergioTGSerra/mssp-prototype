@@ -11,7 +11,6 @@ podman compose -p "$PROJECT_NAME" --env-file .env \
     -f compose.yaml \
     -f overrides/compose.mariadb.yaml \
     -f overrides/compose.redis.yaml \
-    -f overrides/compose.noproxy.yaml \
     up -d
 
 
