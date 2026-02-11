@@ -29,7 +29,7 @@ services:
       retries: 3
     networks:
       - nextcloud-network
-      - waf
+      - waf_default
     environment:
       - NC_DOMAIN
       - NEXTCLOUD_HOST=nextcloud-aio-nextcloud
@@ -533,7 +533,7 @@ networks:
   nextcloud-network:
     name: nextcloud-network
     driver: bridge
-  waf:
+  waf_default:
     external: true
 
 volumes:

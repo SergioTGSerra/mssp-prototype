@@ -4,7 +4,6 @@
 set -a; source .env; set +a
 
 # Criar networks se não existirem
-podman network exists waf || podman network create waf
 podman network exists jumpserver-network || podman network create jumpserver-network
 
 # Create volumes if they don't exist
@@ -25,5 +24,5 @@ else
      -p 2222:2222 \
      docker.io/jumpserver/jms_all:v4.10.15
 
-  podman network connect waf jumpserver
+  podman network connect waf_default jumpserver
 fi

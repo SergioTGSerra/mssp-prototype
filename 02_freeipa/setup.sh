@@ -32,7 +32,7 @@ podman run --name freeipa -d \
     --ds-password=${FREEIPA_DS_PASSWORD} \
     --no-ntp 
 
-podman network connect waf freeipa
+podman network connect waf_default freeipa
 
 fi
 

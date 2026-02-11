@@ -70,7 +70,7 @@ services:
       - websocket
     networks:
       - default
-      - waf
+      - waf_default
 
   websocket:
     container_name: frappe-websocket
@@ -105,5 +105,5 @@ volumes:
   sites:
 
 networks:
-  waf:
+  waf_default:
     external: true

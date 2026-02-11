@@ -5,9 +5,9 @@ set -e
 set -a; source .env; set +a
 
 # Criar network se não existir
-podman network exists waf || podman network create waf
+podman network exists waf_default || podman network create waf_default
 
-WAF_DNS=$(podman network inspect waf --format '{{(index .Subnets 0).Gateway}}')
+WAF_DNS=$(podman network inspect wafwaf_default --format '{{(index .Subnets 0).Gateway}}')
 
 # Variáveis dinâmicas do BunkerWeb
 BUNKER_ENV=()
@@ -30,7 +30,7 @@ if podman container exists bunkerweb; then
 else
   podman run -d \
     --name bunkerweb \
-    --network waf \
+    --network waf_default \
     -h ${BUNKERWEB_HOSTNAME} \
     --restart=always \
     -e DNS_RESOLVERS="${WAF_DNS}" \

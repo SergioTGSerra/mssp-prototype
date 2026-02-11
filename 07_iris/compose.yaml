@@ -127,7 +127,7 @@ services:
       - IRIS_AUTHENTICATION_TYPE
     networks:
       - iris_frontend
-      - waf
+      - waf_default
     volumes:
       - "./certificates/web_certificates/:/www/certs/:ro,z"
     restart: always
@@ -145,5 +145,5 @@ networks:
     name: iris_backend
   iris_frontend:
     name: iris_frontend
-  waf:
+  waf_default:
     external: true

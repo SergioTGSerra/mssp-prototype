@@ -25,3 +25,5 @@ podman compose \
   -f overrides/compose.mariadb.yaml \
   -f overrides/compose.redis.yaml \
   up -d
+
+podman exec frappe-backend bench new-site erp.netzor.pt --admin-password=admin --db-root-password=123 --install-app erpnext --install-app hrms

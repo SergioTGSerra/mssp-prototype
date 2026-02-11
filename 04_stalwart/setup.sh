@@ -50,7 +50,7 @@ else
         --add-host "${KEYCLOAK_HOSTNAME}:host-gateway" \
         --name mailserver docker.io/stalwartlabs/stalwart:v0.15.4-alpine
         
-    podman network connect waf mailserver 2>/dev/null || true
+    podman network connect waf_default mailserver 2>/dev/null || true
 
     # Wait for Stalwart to initialize
     echo "Waiting for Stalwart to initialize (15s)..."
