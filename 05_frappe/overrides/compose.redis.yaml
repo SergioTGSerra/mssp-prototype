@@ -1,25 +1,21 @@
 services:
+  configurator:
+    environment:
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
+    depends_on:
+      - redis-cache
+      - redis-queue
 
   redis-cache:
-    container_name: frappe-redis-cache
-    image: docker.io/library/redis:6.2-alpine
+    image: redis:6.2-alpine
     restart: unless-stopped
-    volumes:
-      - type: tmpfs
-        target: /data
-        tmpfs:
-          mode: 1777
-    networks:
-      - frappe-network
 
   redis-queue:
-    container_name: frappe-redis-queue
-    image: docker.io/library/redis:6.2-alpine
+    image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
       - redis-queue-data:/data
-    networks:
-      - frappe-network
 
 volumes:
   redis-queue-data:

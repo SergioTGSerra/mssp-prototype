@@ -2,32 +2,52 @@ x-customizable-image: &customizable_image
   # By default the image used only contains the `frappe` and `erpnext` apps.
   # See https://github.com/frappe/frappe_docker/blob/main/docs/container-setup/02-build-setup.md#define-custom-apps
   # about using custom images.
-  image: docker.io/frappe/erpnext:${ERPNEXT_VERSION}
-  pull_policy: ${PULL_POLICY:-missing}
+  image: ${CUSTOM_IMAGE:-frappe/erpnext}:${CUSTOM_TAG:-$ERPNEXT_VERSION}
+  pull_policy: ${PULL_POLICY:-always}
   restart: ${RESTART_POLICY:-unless-stopped}
 
+x-depends-on-configurator: &depends_on_configurator
+  depends_on:
+    configurator:
+      condition: service_completed_successfully
+
 x-backend-defaults: &backend_defaults
-  <<: [*customizable_image]
+  <<: [*depends_on_configurator, *customizable_image]
   volumes:
     - sites:/home/frappe/frappe-bench/sites
-    - assets:/home/frappe/frappe-bench/sites/assets
-    - type: tmpfs
-      target: /home/frappe/frappe-bench/logs
-      tmpfs:
-        mode: 1777
 
 services:
+  configurator:
+    <<: *backend_defaults
+    platform: linux/amd64
+    entrypoint:
+      - bash
+      - -c
+    # add redis_socketio for backward compatibility
+    command:
+      - >
+        ls -1 apps > sites/apps.txt;
+        bench set-config -g db_host $$DB_HOST;
+        bench set-config -gp db_port $$DB_PORT;
+        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
+        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
+        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
+        bench set-config -gp socketio_port $$SOCKETIO_PORT;
+    environment:
+      DB_HOST: ${DB_HOST:-}
+      DB_PORT: ${DB_PORT:-}
+      REDIS_CACHE: ${REDIS_CACHE:-}
+      REDIS_QUEUE: ${REDIS_QUEUE:-}
+      SOCKETIO_PORT: 9000
+    depends_on: {}
+    restart: on-failure
 
   backend:
     <<: *backend_defaults
-    container_name: frappe-backend
     platform: linux/amd64
-    networks:
-      - frappe-network
 
   frontend:
     <<: *customizable_image
-    container_name: frappe-frontend
     platform: linux/amd64
     command:
       - nginx-entrypoint.sh
@@ -42,67 +62,40 @@ services:
       CLIENT_MAX_BODY_SIZE: ${CLIENT_MAX_BODY_SIZE:-50m}
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - assets:/home/frappe/frappe-bench/sites/assets
-      - type: tmpfs
-        target: /home/frappe/frappe-bench/logs
-        tmpfs:
-          mode: 1777
-    networks:
-      - frappe-network
-      - waf
     depends_on:
       - backend
       - websocket
+    networks:
+      - waf
 
   websocket:
-    <<: [*customizable_image]
-    container_name: frappe-websocket
+    <<: [*depends_on_configurator, *customizable_image]
     platform: linux/amd64
     command:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     volumes:
       - sites:/home/frappe/frappe-bench/sites
-      - assets:/home/frappe/frappe-bench/sites/assets
-      - type: tmpfs
-        target: /home/frappe/frappe-bench/logs
-        tmpfs:
-          mode: 1777
-    networks:
-      - frappe-network
 
   queue-short:
     <<: *backend_defaults
-    container_name: frappe-queue-short
     platform: linux/amd64
     command: bench worker --queue short,default
-    networks:
-      - frappe-network
 
   queue-long:
     <<: *backend_defaults
-    container_name: frappe-queue-long
     platform: linux/amd64
     command: bench worker --queue long,default,short
-    networks:
-      - frappe-network
 
   scheduler:
     <<: *backend_defaults
-    container_name: frappe-scheduler
     platform: linux/amd64
     command: bench schedule
-    networks:
-      - frappe-network
 
 # ERPNext requires local assets access (Frappe does not)
 volumes:
   sites:
-  assets:
 
 networks:
-  frappe-network:
-    name: frappe-network
-    driver: bridge
   waf:
     external: true

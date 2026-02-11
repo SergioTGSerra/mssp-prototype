@@ -1,8 +1,14 @@
 services:
+  configurator:
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
-    container_name: frappe-db
-    image: docker.io/library/mariadb:11.8
+    image: mariadb:11.8
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 5s
@@ -20,8 +26,6 @@ services:
       MARIADB_AUTO_UPGRADE: 1
     volumes:
       - db-data:/var/lib/mysql
-    networks:
-      - frappe-network
 
 volumes:
   db-data:
