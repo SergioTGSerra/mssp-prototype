@@ -4,6 +4,9 @@ set -e
 #Load env
 set -a; source .env; set +a
 
+# Create network
+podman network create stalwart_default 2>/dev/null || true
+
 # Start Stalwart
 echo "Starting Stalwart Mail Server..."
 # We use -d and -t (allocate pseudo-TTY) which often helps keep interactive apps running
@@ -39,6 +42,7 @@ else
     fi
 
     podman run -d -t \
+        --network stalwart_default \
         -p 25:25 -p 587:587 -p 465:465 \
         -p 143:143 -p 993:993 -p 4190:4190 \
         -p 110:110 -p 995:995 \
