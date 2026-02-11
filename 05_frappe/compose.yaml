@@ -66,6 +66,7 @@ services:
       - backend
       - websocket
     networks:
+      - default
       - waf
 
   websocket:
