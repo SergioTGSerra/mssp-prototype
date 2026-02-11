@@ -27,9 +27,7 @@ install_package() {
         SUDO_CMD="sudo "
     fi
 
-    if [[ "$OS" == "debian" || "$OS" == "ubuntu" || "$LIKE" == *"debian"* ]]; then
-        CMD="${SUDO_CMD}apt-get update && ${SUDO_CMD}apt-get install -y $PACKAGE_NAME"
-    elif [[ "$OS" == "fedora" || "$OS" == "centos" || "$OS" == "rhel" || "$LIKE" == *"rhel"* || "$LIKE" == *"fedora"* ]]; then
+    if [[ "$OS" == "fedora" || "$OS" == "centos" || "$OS" == "rhel" || "$LIKE" == *"rhel"* || "$LIKE" == *"fedora"* ]]; then
         if command -v dnf &> /dev/null; then
             CMD="${SUDO_CMD}dnf install -y $PACKAGE_NAME"
         else
@@ -92,34 +90,17 @@ else
     fi
 fi
 
-echo ">> Checking podman-compose..."
-if command -v podman-compose &> /dev/null; then
-    echo -e "${GREEN}podman-compose is already installed!${NC}"
+echo ">> Checking docker-compose..."
+if dnf list installed docker-compose-plugin &> /dev/null; then
+    echo -e "${GREEN}docker compose já está instalado!${NC}"
 else
-    echo -e "${RED}podman-compose not found. Installing...${NC}"
+    echo -e "${RED}docker-compose not found. Installing...${NC}"
     if [[ "$OS" == "fedora" || "$OS" == "centos" || "$OS" == "rhel" || "$LIKE" == *"rhel"* || "$LIKE" == *"fedora"* ]]; then
         sudo dnf install -y 'dnf-command(config-manager)'
-        sudo dnf config-manager --set-enabled crb
-        sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-        sudo dnf install -y podman-compose
-    elif [[ "$OS" == "debian" || "$OS" == "ubuntu" || "$LIKE" == *"debian"* ]]; then
-        sudo apt-get update
-        if apt-cache show podman-compose &> /dev/null; then
-            sudo apt-get install -y podman-compose
-        else
-            echo -e "${RED}podman-compose not in apt repos, installing via pip...${NC}"
-            sudo apt-get install -y python3-pip
-            pip3 install podman-compose
-        fi
+        sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+        sudo dnf -y install docker-compose-plugin
     else
-         echo "OS not automatically supported for podman-compose installation."
-         exit 1
-    fi
-     
-    if command -v podman-compose &> /dev/null; then
-         echo -e "${GREEN}podman-compose installed successfully!${NC}"
-    else
-         echo -e "${RED}Failed to install podman-compose.${NC}"
+         echo "OS not automatically supported for docker-compose installation."
          exit 1
     fi
 fi
