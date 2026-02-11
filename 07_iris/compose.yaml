@@ -70,6 +70,8 @@ services:
       - OIDC_ISSUER_URL=https://${KEYCLOAK_HOSTNAME}/realms/netzor
       - OIDC_CLIENT_ID=${IRIS_OIDC_CLIENT_ID}
       - OIDC_CLIENT_SECRET=${IRIS_OIDC_CLIENT_SECRET}
+      - OIDC_AUTH_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/auth
+      - OIDC_TOKEN_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token
       - OIDC_END_SESSION_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/logout
     networks:
       - iris_backend
@@ -108,6 +110,8 @@ services:
       - OIDC_ISSUER_URL=https://${KEYCLOAK_HOSTNAME}/realms/netzor
       - OIDC_CLIENT_ID=${IRIS_OIDC_CLIENT_ID}
       - OIDC_CLIENT_SECRET=${IRIS_OIDC_CLIENT_SECRET}
+      - OIDC_AUTH_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/auth
+      - OIDC_TOKEN_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token
       - OIDC_END_SESSION_ENDPOINT=https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/logout
     networks:
       - iris_backend
