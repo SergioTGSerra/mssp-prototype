@@ -5,13 +5,13 @@ set -e
 set -a; source .env; set +a
 
 # Criar network se não existir
-podman network exists ipa || podman network create ipa
+podman network exists ipa_default || podman network create ipa_default
 
 if podman container exists freeipa; then
   podman start freeipa
 else
 podman run --name freeipa -d \
-    --network=ipa \
+    --network=ipa_default \
     --restart=always \
     -h ${FREEIPA_HOSTNAME} --read-only \
     --tmpfs /run --tmpfs /tmp \
