@@ -18,6 +18,7 @@ x-backend-defaults: &backend_defaults
 
 services:
   configurator:
+    container_name: frappe-configurator
     <<: *backend_defaults
     platform: linux/amd64
     entrypoint:
@@ -43,10 +44,12 @@ services:
     restart: on-failure
 
   backend:
+    container_name: frappe-backend
     <<: *backend_defaults
     platform: linux/amd64
 
   frontend:
+    container_name: frappe-frontend
     <<: *customizable_image
     platform: linux/amd64
     command:
@@ -70,6 +73,7 @@ services:
       - waf
 
   websocket:
+    container_name: frappe-websocket
     <<: [*depends_on_configurator, *customizable_image]
     platform: linux/amd64
     command:
@@ -79,16 +83,19 @@ services:
       - sites:/home/frappe/frappe-bench/sites
 
   queue-short:
+    container_name: frappe-queue-short
     <<: *backend_defaults
     platform: linux/amd64
     command: bench worker --queue short,default
 
   queue-long:
+    container_name: frappe-queue-long
     <<: *backend_defaults
     platform: linux/amd64
     command: bench worker --queue long,default,short
 
   scheduler:
+    container_name: frappe-scheduler
     <<: *backend_defaults
     platform: linux/amd64
     command: bench schedule

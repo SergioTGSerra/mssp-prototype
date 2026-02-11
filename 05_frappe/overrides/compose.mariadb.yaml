@@ -8,6 +8,7 @@ services:
         condition: service_healthy
 
   db:
+    container_name: frappe-db
     image: mariadb:11.8
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]

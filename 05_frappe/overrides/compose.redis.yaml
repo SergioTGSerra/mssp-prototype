@@ -8,10 +8,12 @@ services:
       - redis-queue
 
   redis-cache:
+    container_name: frappe-redis-cache
     image: redis:6.2-alpine
     restart: unless-stopped
 
   redis-queue:
+    container_name: frappe-redis-queue
     image: redis:6.2-alpine
     restart: unless-stopped
     volumes:
