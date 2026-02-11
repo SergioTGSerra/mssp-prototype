@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: keycloak_db
       POSTGRES_USER: keycloak_db_user
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
-    networks:
-      - keycloak-network
     volumes:
       - keycloak-postgres-data:/var/lib/postgresql:Z
     healthcheck:
@@ -47,15 +45,12 @@ services:
       retries: 3
       timeout: 5s
     networks:
-      - keycloak-network
+      - default
       - waf
     extra_hosts:
       - "${FREEIPA_HOSTNAME}:host-gateway"
 
 networks:
-  keycloak-network:
-    name: keycloak-network
-    driver: bridge
   waf:
     external: true
 
