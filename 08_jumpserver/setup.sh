@@ -4,7 +4,7 @@
 set -a; source .env; set +a
 
 # Criar networks se não existirem
-podman network exists jumpserver-network || podman network create jumpserver-network
+podman network exists jumpserver_default || podman network create jumpserver_default
 
 # Create volumes if they don't exist
 podman volume exists jsdata || podman volume create jsdata
@@ -14,7 +14,7 @@ if podman container exists jumpserver; then
   podman start jumpserver
 else
   podman run --name jumpserver -d \
-     --network=jumpserver-network \
+     --network=jumpserver_default \
      -e SECRET_KEY=PleaseChangeMe \
      -e BOOTSTRAP_TOKEN=PleaseChangeMe \
      -v jsdata:/opt/data \

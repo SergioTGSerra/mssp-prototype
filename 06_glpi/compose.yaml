@@ -3,8 +3,8 @@ services:
     image: docker.io/glpi/glpi:11.0.5
     container_name: glpi
     networks:
-      - glpi
-      - waf
+      - default
+      - waf_default
     volumes:
       - glpi:/var/glpi
     environment:
@@ -26,8 +26,6 @@ services:
   glpi-db:
     image: mariadb:12.1
     container_name: glpi-db
-    networks:
-      - glpi
     volumes:
       - glpi-db:/var/lib/mysql
     environment:
@@ -49,8 +47,5 @@ volumes:
     name: glpi
 
 networks:
-  glpi:
-    name: glpi
-    driver: bridge
-  waf:
+  waf_default:
     external: true
