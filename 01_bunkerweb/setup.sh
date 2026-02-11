@@ -7,7 +7,7 @@ set -a; source .env; set +a
 # Criar network se não existir
 podman network exists waf_default || podman network create waf_default
 
-WAF_DNS=$(podman network inspect wafwaf_default --format '{{(index .Subnets 0).Gateway}}')
+WAF_DNS=$(podman network inspect waf_default --format '{{(index .Subnets 0).Gateway}}')
 
 # Variáveis dinâmicas do BunkerWeb
 BUNKER_ENV=()
