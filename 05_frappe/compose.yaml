@@ -6,13 +6,8 @@ x-customizable-image: &customizable_image
   pull_policy: ${PULL_POLICY:-missing}
   restart: ${RESTART_POLICY:-unless-stopped}
 
-x-depends-on-configurator: &depends_on_configurator
-  depends_on:
-    configurator:
-      condition: service_completed_successfully
-
 x-backend-defaults: &backend_defaults
-  <<: [*depends_on_configurator, *customizable_image]
+  <<: [*customizable_image]
   volumes:
     - sites:/home/frappe/frappe-bench/sites
     - assets:/home/frappe/frappe-bench/sites/assets
@@ -22,33 +17,6 @@ x-backend-defaults: &backend_defaults
         mode: 1777
 
 services:
-  configurator:
-    <<: *backend_defaults
-    container_name: frappe-configurator
-    platform: linux/amd64
-    entrypoint:
-      - bash
-      - -c
-    # add redis_socketio for backward compatibility
-    command:
-      - >
-        ls -1 apps > sites/apps.txt;
-        bench set-config -g db_host $$DB_HOST;
-        bench set-config -gp db_port $$DB_PORT;
-        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
-        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
-        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
-        bench set-config -gp socketio_port $$SOCKETIO_PORT;
-    environment:
-      DB_HOST: ${DB_HOST:-}
-      DB_PORT: ${DB_PORT:-}
-      REDIS_CACHE: ${REDIS_CACHE:-}
-      REDIS_QUEUE: ${REDIS_QUEUE:-}
-      SOCKETIO_PORT: 9000
-    depends_on: {}
-    restart: on-failure
-    networks:
-      - frappe-network
 
   backend:
     <<: *backend_defaults
@@ -87,7 +55,7 @@ services:
       - websocket
 
   websocket:
-    <<: [*depends_on_configurator, *customizable_image]
+    <<: [*customizable_image]
     container_name: frappe-websocket
     platform: linux/amd64
     command:

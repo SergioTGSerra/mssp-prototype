@@ -1,11 +1,4 @@
 services:
-  configurator:
-    environment:
-      DB_HOST: db
-      DB_PORT: "3306"
-    depends_on:
-      db:
-        condition: service_healthy
 
   db:
     container_name: frappe-db
