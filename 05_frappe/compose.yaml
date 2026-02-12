@@ -13,6 +13,8 @@ x-depends-on-configurator: &depends_on_configurator
 
 x-backend-defaults: &backend_defaults
   <<: [*depends_on_configurator, *customizable_image]
+  extra_hosts:
+    - "${KEYCLOAK_HOSTNAME}:host-gateway"
   volumes:
     - sites:/home/frappe/frappe-bench/sites
 
