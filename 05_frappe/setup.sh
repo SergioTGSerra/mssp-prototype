@@ -45,11 +45,12 @@ podman exec frappe-backend bench --site erp.netzor.pt execute frappe.client.inse
         "client_id": "${FRAPPE_OIDC_CLIENT_ID}",
         "client_secret": "${FRAPPE_OIDC_CLIENT_SECRET}",
         "base_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor",
-        "authorize_url": "/protocol/openid-connect/auth",
-        "access_token_url": "/protocol/openid-connect/token",
+        "authorize_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/auth",
+        "access_token_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token",
         "redirect_url": "/api/method/frappe.integrations.oauth2_logins.login_via_keycloak",
-        "api_endpoint": "/protocol/openid-connect/userinfo",
+        "api_endpoint": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo",
         "auth_url_data": "{\"response_type\": \"code\", \"scope\": \"openid\"}",
+        "custom_base_url": 1,
         "sign_ups": "Allow",
         "show_in_resource_metadata": 1
     }
@@ -67,10 +68,11 @@ PYEOF
         "client_id": "${FRAPPE_OIDC_CLIENT_ID}",
         "client_secret": "${FRAPPE_OIDC_CLIENT_SECRET}",
         "base_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor",
-        "authorize_url": "/protocol/openid-connect/auth",
-        "access_token_url": "/protocol/openid-connect/token",
+        "authorize_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/auth",
+        "access_token_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/token",
         "redirect_url": "/api/method/frappe.integrations.oauth2_logins.login_via_keycloak",
-        "api_endpoint": "/protocol/openid-connect/userinfo",
+        "api_endpoint": "https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo",
+        "custom_base_url": 1,
         "sign_ups": "Allow"
     }
 }
