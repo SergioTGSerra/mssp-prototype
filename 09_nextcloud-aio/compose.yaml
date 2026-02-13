@@ -25,7 +25,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     networks:
       - nextcloud-network
@@ -67,7 +66,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "5432"
@@ -116,7 +114,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "9000"
@@ -202,7 +199,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "7867"
@@ -237,7 +233,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "6379"
@@ -263,7 +258,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 9
     expose:
       - "9980"
@@ -298,7 +292,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     ports:
       - ${TALK_PORT}:${TALK_PORT}/tcp
@@ -339,7 +332,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "1234"
@@ -372,7 +364,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 9
     expose:
       - "3310"
@@ -405,7 +396,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 9
     expose:
       - "80"
@@ -441,7 +431,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "9000"
@@ -470,7 +459,6 @@ services:
       test: /healthcheck.sh
       interval: 10s
       timeout: 5s
-      start_interval: 5s
       retries: 5
     expose:
       - "9200"
@@ -505,7 +493,6 @@ services:
       test: /healthcheck.sh
       interval: 30s
       timeout: 30s
-      start_interval: 5s
       retries: 3
     expose:
       - "3002"
