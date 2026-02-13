@@ -96,4 +96,34 @@ else
     [[ -n "$MAPPER_ID" && "$MAPPER_ID" != "null" ]] && \
         podman exec keycloak /opt/keycloak/bin/kcadm.sh update components/${MAPPER_ID} -r netzor -s 'config."ldap.attribute"=["givenName"]' > /dev/null 2>&1 || \
         echo "ERROR: Failed to update LDAP mapper."
+
+    # Create "Grupos-FreeIPA" mapper
+    echo "Creating 'Grupos-FreeIPA' mapper..."
+    GROUP_MAPPER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q "name=Grupos-FreeIPA" 2>/dev/null | jq -r ".[] | select(.parentId == \"${LDAP_ID}\") | .id")
+    
+    if [[ -z "$GROUP_MAPPER_ID" || "$GROUP_MAPPER_ID" == "null" ]]; then
+        echo "Creating new Group Mapper..."
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
+            -s name="Grupos-FreeIPA" \
+            -s providerId="group-ldap-mapper" \
+            -s providerType="org.keycloak.storage.ldap.mappers.LDAPStorageMapper" \
+            -s parentId="$LDAP_ID" \
+            -s 'config."groups.dn"=["cn=groups,cn=accounts,dc=netzor,dc=pt"]' \
+            -s 'config."group.name.ldap.attribute"=["cn"]' \
+            -s 'config."group.object.classes"=["groupofnames, ipausergroup"]' \
+            -s 'config."preserve.group.inheritance"=["true"]' \
+            -s 'config."ignore.missing.groups"=["false"]' \
+            -s 'config."membership.ldap.attribute"=["member"]' \
+            -s 'config."membership.attribute.type"=["DN"]' \
+            -s 'config."membership.user.ldap.attribute"=["member"]' \
+            -s 'config."groups.ldap.filter"=["(objectclass=ipausergroup)"]' \
+            -s 'config."mode"=["READ_ONLY"]' \
+            -s 'config."user.roles.retrieve.strategy"=["GET_GROUPS_FROM_USER_MEMBEROF_ATTRIBUTE"]' \
+            -s 'config."memberof.ldap.attribute"=["memberOf"]' \
+            -s 'config."drop.non.existing.groups.during.sync"=["true"]' \
+            -s 'config."groups.path"=["/"]' || echo "Failed to create Grupos-FreeIPA mapper"
+    else
+        echo "Grupos-FreeIPA mapper already exists."
+    fi
+
 fi
