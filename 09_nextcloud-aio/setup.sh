@@ -3,7 +3,6 @@
 #Load env
 set -a; source .env; set +a
 
-
 cd "$(dirname "$0")"
 PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
 podman compose -p "$PROJECT_NAME" -f compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
@@ -40,27 +39,11 @@ podman exec -u www-data nextcloud-aio-nextcloud php occ app:disable firstrunwiza
 podman exec -u www-data nextcloud-aio-nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud-aio-nextcloud php occ app:enable user_oidc
 
 # Create Nextcloud OIDC client
-echo "Creating Nextcloud OIDC client..."
-if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=${NEXTCLOUD_OIDC_CLIENT_ID} --fields clientId 2>/dev/null | grep -q "${NEXTCLOUD_OIDC_CLIENT_ID}"; then
-    echo "Nextcloud OIDC client already exists."
-else
-    if podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor \
-        -s clientId="${NEXTCLOUD_OIDC_CLIENT_ID}" \
-        -s enabled=true \
-        -s clientAuthenticatorType=client-secret \
-        -s secret="${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-        -s "redirectUris=[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
-        -s "attributes={\"post.logout.redirect.uris\":\"https://${NEXTCLOUD_HOSTNAME}/*##http://${NEXTCLOUD_HOSTNAME}/*\"}" \
-        -s "webOrigins=[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
-        -s publicClient=false \
-        -s protocol=openid-connect \
-        -s 'defaultClientScopes=["profile", "openid", "email"]' \
-        > /dev/null 2>&1; then
-        echo "Nextcloud OIDC client created successfully."
-    else
-        echo "ERROR: Failed to create Nextcloud OIDC client."
-    fi
-fi
+
+keycloak_create_oidc_client "${NEXTCLOUD_OIDC_CLIENT_ID}" "${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
+    "[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
+    "[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
+    "{\"post.logout.redirect.uris\":\"https://${NEXTCLOUD_HOSTNAME}/*##http://${NEXTCLOUD_HOSTNAME}/*\"}"
 
 # Set skeleton directory to empty string
 podman exec -u www-data nextcloud-aio-nextcloud php occ config:system:set skeletondirectory --value=''

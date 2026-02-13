@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Import utils and load environment variables
+set -a
 source ./utils.sh
-set -a; source .env; set +a
+source .env
+set +a
 
 # 1. Setup Prerequisites (OpenSSL, Podman)
 echo ">> Step 0: Checking/Installing Prerequisites..."

@@ -14,32 +14,13 @@ if podman container exists mailserver; then
   podman start mailserver
 else
     # Create Keycloak OIDC Client for Mailserver
-    echo "Configuring Keycloak OIDC Client for Mailserver..."
-    if podman inspect keycloak >/dev/null 2>&1; then
-        podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
-
-        # Check if client already exists
-        if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=mailserver --fields id 2>/dev/null | grep -q '"id"'; then
-            echo "Creating 'mailserver' OIDC client..."
-            podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor \
-                -s clientId=mailserver \
-                -s enabled=true \
-                -s clientAuthenticatorType=client-secret \
-                -s secret="${MAILSERVER_OIDC_CLIENT_SECRET}" \
-                -s 'redirectUris=["*"]' \
-                -s directAccessGrantsEnabled=true \
-                -s serviceAccountsEnabled=true \
-                -s publicClient=false \
-                -s protocol=openid-connect \
-                -s 'standardFlowEnabled=true' \
-                -s 'attributes={"oauth2.device.authorization.grant.enabled":"true","oidc.ciba.grant.enabled":"false"}' \
-                > /dev/null 2>&1 || echo "Client might already exist."
-        else
-            echo "'mailserver' OIDC client already exists."
-        fi
-    else
-        echo "Warning: Keycloak container not found. Skipping Keycloak client creation."
-    fi
+    keycloak_create_oidc_client "mailserver" "${MAILSERVER_OIDC_CLIENT_SECRET}" \
+        '["*"]' \
+        '' \
+        '{"oauth2.device.authorization.grant.enabled":"true","oidc.ciba.grant.enabled":"false"}' \
+        "directAccessGrantsEnabled=true" \
+        "serviceAccountsEnabled=true" \
+        "standardFlowEnabled=true"
 
     podman run -d -t \
         --network stalwart_default \

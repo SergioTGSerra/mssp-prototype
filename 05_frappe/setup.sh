@@ -28,3 +28,55 @@ podman compose \
 
 podman exec frappe-backend bench new-site erp.netzor.pt --admin-password=admin --db-root-password=123 --install-app erpnext --install-app hrms
 podman exec frappe-backend bench --site erp.netzor.pt set-config host_name "https://${FRAPPE_HOSTNAME}"
+
+# ── Keycloak OIDC Client for Frappe/ERPNext ──────────────────────────────────
+
+keycloak_create_oidc_client "${FRAPPE_OIDC_CLIENT_ID}" "${FRAPPE_OIDC_CLIENT_SECRET}" \
+    "[\"https://${FRAPPE_HOSTNAME}/api/method/frappe.integrations.oauth2_logins.login_via_keycloak\"]" \
+    "[\"https://${FRAPPE_HOSTNAME}\"]" \
+    "{\"post.logout.redirect.uris\":\"https://${FRAPPE_HOSTNAME}/*\"}"
+
+# ── Configure Frappe Social Login Key (Keycloak) ─────────────────────────────
+echo ">> Configuring Frappe Social Login Key for Keycloak..."
+podman exec frappe-backend bench --site erp.netzor.pt execute frappe.client.insert --kwargs "$(cat <<PYEOF
+{
+    "doc": {
+        "doctype": "Social Login Key",
+        "provider_name": "Keycloak",
+        "enable_social_login": 1,
+        "social_login_provider": "Keycloak",
+        "client_id": "${FRAPPE_OIDC_CLIENT_ID}",
+        "client_secret": "${FRAPPE_OIDC_CLIENT_SECRET}",
+        "base_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor",
+        "authorize_url": "/protocol/openid-connect/auth",
+        "access_token_url": "/protocol/openid-connect/token",
+        "redirect_url": "/api/method/frappe.integrations.oauth2_logins.login_via_keycloak",
+        "api_endpoint": "/protocol/openid-connect/userinfo",
+        "auth_url_data": "{\"response_type\": \"code\", \"scope\": \"openid\"}",
+        "sign_ups": "Allow",
+        "show_in_resource_metadata": 1
+    }
+}
+PYEOF
+)" 2>/dev/null && echo ">> Social Login Key configured successfully." || {
+    # If already exists, update it instead
+    echo ">> Social Login Key may already exist, attempting update..."
+    podman exec frappe-backend bench --site erp.netzor.pt execute frappe.client.set_value --kwargs "$(cat <<PYEOF
+{
+    "doctype": "Social Login Key",
+    "name": "Keycloak",
+    "fieldname": {
+        "enable_social_login": 1,
+        "client_id": "${FRAPPE_OIDC_CLIENT_ID}",
+        "client_secret": "${FRAPPE_OIDC_CLIENT_SECRET}",
+        "base_url": "https://${KEYCLOAK_HOSTNAME}/realms/netzor",
+        "authorize_url": "/protocol/openid-connect/auth",
+        "access_token_url": "/protocol/openid-connect/token",
+        "redirect_url": "/api/method/frappe.integrations.oauth2_logins.login_via_keycloak",
+        "api_endpoint": "/protocol/openid-connect/userinfo",
+        "sign_ups": "Allow"
+    }
+}
+PYEOF
+)" && echo ">> Social Login Key updated successfully." || echo ">> ERROR: Failed to configure Social Login Key."
+}
