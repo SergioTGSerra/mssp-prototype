@@ -8,11 +8,11 @@ services:
     volumes:
       - glpi:/var/glpi
     environment:
-      - GLPI_DB_HOST=glpi-db
-      - GLPI_DB_PORT=3306
-      - GLPI_DB_NAME=${GLPI_DB_NAME}
-      - GLPI_DB_USER=${GLPI_DB_USER}
-      - GLPI_DB_PASSWORD=${GLPI_DB_PASSWORD}
+      GLPI_DB_HOST: glpi-db
+      GLPI_DB_PORT: 3306
+      GLPI_DB_NAME: ${GLPI_DB_NAME}
+      GLPI_DB_USER: ${GLPI_DB_USER}
+      GLPI_DB_PASSWORD: ${GLPI_DB_PASSWORD}
     healthcheck:
       test: ['CMD-SHELL', 'test -f /var/glpi/config/config_db.php && curl -sf http://localhost:80/ || exit 1']
       interval: 10s
@@ -29,12 +29,12 @@ services:
     volumes:
       - glpi-db:/var/lib/mysql
     environment:
-      - MARIADB_RANDOM_ROOT_PASSWORD=yes
-      - MARIADB_DATABASE=${GLPI_DB_NAME}
-      - MARIADB_USER=${GLPI_DB_USER}
-      - MARIADB_PASSWORD=${GLPI_DB_PASSWORD}
+      MARIADB_RANDOM_ROOT_PASSWORD: yes
+      MARIADB_DATABASE: ${GLPI_DB_NAME}
+      MARIADB_USER: ${GLPI_DB_USER}
+      MARIADB_PASSWORD: ${GLPI_DB_PASSWORD}
     healthcheck:
-      test: ['CMD', 'mariadb-admin', 'ping', '-h', '127.0.0.1', '-u', '$MARIADB_USER', '--password=$MARIADB_PASSWORD']
+      test: ['CMD', 'mariadb-admin', 'ping', '-h', '127.0.0.1', '-u', '${GLPI_DB_USER}', '--password=${GLPI_DB_PASSWORD}']
       interval: 5s
       retries: 10
       start_period: 5s

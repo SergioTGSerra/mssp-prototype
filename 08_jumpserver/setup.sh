@@ -1,7 +1,5 @@
 #!/bin/bash
-
-# Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 # Criar networks se não existirem
 podman network exists jumpserver_default || podman network create jumpserver_default

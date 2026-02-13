@@ -1,5 +1,29 @@
 #!/bin/bash
 
+# ── Common Utilities ──────────────────────────────────────────────────────────
+
+# Initialize script environment
+# Sets exit on error (set -e).
+# Loads the main .env (from project root) first, then overrides with local .env if present.
+# Automatically exports all variables.
+# Usage: script_init
+script_init() {
+    set -e
+    set -a
+    
+    # Load root .env if it exists (when called from a subdirectory)
+    if [ -f "../.env" ]; then
+        source ../.env
+    fi
+    
+    # Load local .env if it exists (overrides root .env)
+    if [ -f ".env" ]; then
+        source .env
+    fi
+    
+    set +a
+}
+
 # ── Keycloak Utilities ────────────────────────────────────────────────────────
 
 # Create an OIDC client in Keycloak (idempotent).

@@ -1,8 +1,5 @@
 #!/bin/bash
-set -e
-
-#Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 # Add keycloak-bind system user to FreeIPA
 echo "Configuring FreeIPA Bind User..."

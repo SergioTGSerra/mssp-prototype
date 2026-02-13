@@ -1,8 +1,5 @@
 #!/bin/bash
-set -e
-
-#Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 # Criar network se não existir
 podman network exists ipa_default || podman network create ipa_default

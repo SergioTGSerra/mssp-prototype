@@ -1,8 +1,5 @@
 #!/bin/bash
-set -e
-
-#Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 cd "$(dirname "$0")"
 

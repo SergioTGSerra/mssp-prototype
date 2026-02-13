@@ -1,7 +1,5 @@
 #!/bin/bash
-
-#Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 cd "$(dirname "$0")"
 PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
@@ -86,8 +84,8 @@ $CERT_CONTENT
 
     # Insert configuration using heredoc to handle multiline certificates safely
     echo "Configuring SAML Plugin settings in database (Clean setup)..."
-    podman exec glpi-db mariadb -u glpi -pglpi glpi -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
-    podman exec -i glpi-db mariadb -u glpi -pglpi glpi <<EOF
+    podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "DELETE FROM glpi_plugin_samlsso_configs WHERE name='Keycloak';"
+    podman exec -i glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" <<EOF
 INSERT INTO glpi_plugin_samlsso_configs (
     name, is_active, enforce_sso,
     idp_entity_id, 
@@ -134,9 +132,9 @@ EOF
 
     # Deactivate default "Root" authorization rule and unset default profile
     # This ensures new users don't get 'Self-Service' in 'Root Entity' by default
-    #podman exec glpi-db mysql -u glpi -pglpi glpi -e "UPDATE glpi_rules SET is_active = 0 WHERE name = 'Root' AND sub_type = 'RuleRight';"
+    #podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "UPDATE glpi_rules SET is_active = 0 WHERE name = 'Root' AND sub_type = 'RuleRight';"
     echo "Disabling default authorization rules and profiles..."
-    podman exec glpi-db mariadb -u glpi -pglpi glpi -e "UPDATE glpi_profiles SET is_default = 0 WHERE name = 'Self-Service';"
+    podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "UPDATE glpi_profiles SET is_default = 0 WHERE name = 'Self-Service';"
 
     # Update Keycloak with SP Certificate for signature verification (Security Best Practice)
     echo "Updating Keycloak with GLPI SP signing certificate..."

@@ -1,7 +1,5 @@
 #!/bin/bash
-
-# Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 cd "$(dirname "$0")"
 PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')

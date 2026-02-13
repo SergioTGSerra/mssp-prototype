@@ -1,8 +1,5 @@
 #!/bin/bash
-set -e
-
-#Load env
-set -a; source .env; set +a
+source utils.sh; script_init;
 
 # Create network
 podman network create stalwart_default 2>/dev/null || true
