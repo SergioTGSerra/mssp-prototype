@@ -76,6 +76,15 @@ else
     fi
 fi
 
+echo ">> Enabling and starting Podman socket..."
+if systemctl is-active --quiet podman.socket; then
+    echo -e "${GREEN}Podman socket is already active!${NC}"
+else
+    ${SUDO_CMD}systemctl enable podman.socket
+    ${SUDO_CMD}systemctl start podman.socket
+    echo -e "${GREEN}Podman socket activated successfully!${NC}"
+fi
+
 echo ">> Checking jq..."
 if command -v jq &> /dev/null; then
     echo -e "${GREEN}jq is already installed!${NC}"
