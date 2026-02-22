@@ -53,6 +53,14 @@ podman exec freeipa bash -c "
     kdestroy
 "
 
+# Create main user
+podman exec freeipa bash -c "
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+    echo '${MAIN_USER_PASSWORD}' | ipa user-add ${MAIN_USER_USERNAME} --first='${MAIN_USER_FIRSTNAME}' --last='${MAIN_USER_LASTNAME}' --password
+    ipa group-add-member admins --users=${MAIN_USER_USERNAME}
+    kdestroy
+"
+
 # FREEIPA DNS
     # -p 53:53/udp -p 53:53 \
     # --dns=127.0.0.1,1.1.1.1,8.8.8.8 \
