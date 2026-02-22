@@ -57,6 +57,7 @@ podman exec freeipa bash -c "
 podman exec freeipa bash -c "
     echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
     echo '${MAIN_USER_PASSWORD}' | ipa user-add ${MAIN_USER_USERNAME} --first='${MAIN_USER_FIRSTNAME}' --last='${MAIN_USER_LASTNAME}' --password
+    echo -e '${MAIN_USER_PASSWORD}\n${MAIN_USER_PASSWORD}\n${MAIN_USER_PASSWORD}' | kpasswd ${MAIN_USER_USERNAME}
     ipa group-add-member admins --users=${MAIN_USER_USERNAME}
     kdestroy
 "

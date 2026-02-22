@@ -33,4 +33,11 @@ for folder in $(ls -d [0-9][0-9]_*/ 2>/dev/null | sort); do
     fi
 done
 
+# Disable freeipa admin user
+podman exec freeipa bash -c "
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+    ipa user-disable admin
+    kdestroy
+"
+
 echo ">> All services installed successfully!"
