@@ -114,3 +114,73 @@ keycloak_create_oidc_client() {
         return 1
     fi
 }
+
+# ── FreeIPA Utilities ─────────────────────────────────────────────────────────
+
+# Create a system account in FreeIPA (idempotent).
+# The user is created with /sbin/nologin shell and added to the system-accounts group.
+#
+# Usage:
+#   freeipa_create_system_account <username> <first_name> <last_name> <password> [cn]
+#
+# Arguments:
+#   username    - The username for the system account (e.g. "keycloak-bind")
+#   first_name  - First name of the account (e.g. "Keycloak")
+#   last_name   - Last name of the account (e.g. "Bind")
+#   password    - Password for the system account
+#   cn          - (optional) Custom common name (e.g. "Keycloak Bind System Account")
+#
+# Requires:
+#   FREEIPA_ADMIN_PASSWORD - env var with admin password
+#
+# Returns 0 on success (or if user already exists), 1 on error.
+freeipa_create_system_account() {
+    local username="$1"
+    local first_name="$2"
+    local last_name="$3"
+    local password="$4"
+    local cn="${5:-}"
+
+    if [ -z "$username" ] || [ -z "$first_name" ] || [ -z "$last_name" ] || [ -z "$password" ]; then
+        echo "ERROR: freeipa_create_system_account requires at least username, first_name, last_name, and password."
+        return 1
+    fi
+
+    if ! podman inspect freeipa > /dev/null 2>&1; then
+        echo "ERROR: FreeIPA container not found. Cannot create system account '${username}'."
+        return 1
+    fi
+
+    echo ">> Creating FreeIPA system account '${username}'..."
+
+    local cn_flag=""
+    if [ -n "$cn" ]; then
+        cn_flag="--cn='${cn}'"
+    fi
+
+    podman exec freeipa bash -c "
+        echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin > /dev/null 2>&1
+
+        if ! ipa user-show ${username} > /dev/null 2>&1; then
+            ipa user-add ${username} \
+                --first='${first_name}' \
+                --last='${last_name}' \
+                ${cn_flag} \
+                --shell=/sbin/nologin
+        fi
+
+        ipa group-add-member system-accounts --users=${username} > /dev/null 2>&1 || true
+
+        echo -e '${password}\n${password}' | ipa passwd ${username} > /dev/null 2>&1
+
+        kdestroy
+    "
+
+    if [ $? -eq 0 ]; then
+        echo ">> FreeIPA system account '${username}' configured successfully."
+        return 0
+    else
+        echo ">> ERROR: Failed to configure FreeIPA system account '${username}'."
+        return 1
+    fi
+}

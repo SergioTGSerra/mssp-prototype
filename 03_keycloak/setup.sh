@@ -2,24 +2,7 @@
 source utils.sh; script_init;
 
 # Add keycloak-bind system user to FreeIPA
-echo "Configuring FreeIPA Bind User..."
-podman exec freeipa bash -c "
-    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin > /dev/null 2>&1
-
-    if ! ipa user-show keycloak-bind > /dev/null 2>&1; then
-        ipa user-add keycloak-bind \
-            --first=Keycloak \
-            --last=Bind \
-            --cn='Keycloak Bind System Account' \
-            --shell=/sbin/nologin
-    fi
-
-    ipa group-add-member system-accounts --users=keycloak-bind > /dev/null 2>&1 || true
-
-    echo -e '${KEYCLOAK_LDAP_BIND_PASSWORD}\n${KEYCLOAK_LDAP_BIND_PASSWORD}' | ipa passwd keycloak-bind > /dev/null 2>&1
-    
-    kdestroy
-"
+freeipa_create_system_account "keycloak-bind" "Keycloak" "Bind" "${KEYCLOAK_LDAP_BIND_PASSWORD}" "Keycloak Bind System Account"
 
 # Start Keycloak with Podman Compose
 echo "Starting Keycloak..."
