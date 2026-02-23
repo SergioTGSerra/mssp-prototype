@@ -170,6 +170,7 @@ freeipa_create_system_account() {
         fi
 
         ipa group-add-member system-accounts --users=${username} > /dev/null 2>&1 || true
+        ipa group-remove-member ipausers --users=${username} > /dev/null 2>&1 || true
 
         echo -e '${password}\n${password}' | ipa passwd ${username} > /dev/null 2>&1
 
