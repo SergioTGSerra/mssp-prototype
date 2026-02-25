@@ -111,6 +111,32 @@ else
 
 fi
 
+# Sync LDAP users to netzor realm
+# echo "Syncing LDAP users..."
+# LDAP_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q name=freeipa-ldap | jq -r '.[0].id')
+# if [[ -n "$LDAP_ID" && "$LDAP_ID" != "null" ]]; then
+#     podman exec keycloak /opt/keycloak/bin/kcadm.sh create user-storage/"${LDAP_ID}"/sync -r netzor -s "action=triggerFullSync" > /dev/null 2>&1
+#     sleep 5
+# fi
+
+# Assign realm-admin role to main user in netzor realm
+echo "Assigning realm-admin role to '${MAIN_USER_USERNAME}' in netzor realm..."
+USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r netzor -q username="${MAIN_USER_USERNAME}" | jq -r '.[0].id')
+if [[ -n "$USER_ID" && "$USER_ID" != "null" ]]; then
+    CLIENT_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=realm-management | jq -r '.[0].id')
+    if [[ -n "$CLIENT_ID" && "$CLIENT_ID" != "null" ]]; then
+        ROLE_JSON=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients/"${CLIENT_ID}"/roles/realm-admin -r netzor)
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh create users/"${USER_ID}"/role-mappings/clients/"${CLIENT_ID}" -r netzor -b "[${ROLE_JSON}]" || {
+            echo "ERROR: Failed to assign realm-admin role."
+        }
+        echo "realm-admin role assigned to '${MAIN_USER_USERNAME}' successfully."
+    else
+        echo "ERROR: realm-management client not found in netzor realm."
+    fi
+else
+    echo "ERROR: User '${MAIN_USER_USERNAME}' not found in netzor realm."
+fi
+
 # Block admin user in master realm
 echo "Blocking admin user in master realm..."
 ADMIN_USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r master -q username="${KEYCLOAK_ADMIN_USERNAME}" | jq -r '.[0].id')
