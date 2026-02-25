@@ -148,3 +148,11 @@ if [[ -n "$ADMIN_USER_ID" && "$ADMIN_USER_ID" != "null" ]]; then
 else
     echo "ERROR: Admin user not found in master realm."
 fi
+
+# Create OIDC Client for FreeIPA
+echo "Creating OIDC client for FreeIPA..."
+keycloak_create_oidc_client "${FREEIPA_OIDC_CLIENT_ID}" "${FREEIPA_OIDC_CLIENT_SECRET}" \
+    "[\"https://${FREEIPA_HOSTNAME}/ipa/oidc-callback\"]" \
+    "[\"https://${FREEIPA_HOSTNAME}\"]" \
+    "{\"post.logout.redirect.uris\":\"https://${FREEIPA_HOSTNAME}/*\",\"oauth2.device.authorization.grant.enabled\":\"true\"}" \
+    "directAccessGrantsEnabled=true"

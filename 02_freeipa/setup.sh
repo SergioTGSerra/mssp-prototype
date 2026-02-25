@@ -62,6 +62,19 @@ podman exec freeipa bash -c "
     kdestroy
 "
 
+# Configure OAuth 2.0 - Keycloak as External IdP
+echo "Configuring Keycloak as external IdP in FreeIPA..."
+podman exec freeipa bash -c "
+    echo '${FREEIPA_ADMIN_PASSWORD}' | kinit admin
+    echo '${FREEIPA_OIDC_CLIENT_SECRET}' | ipa idp-add keycloak \
+        --provider keycloak \
+        --client-id '${FREEIPA_OIDC_CLIENT_ID}' \
+        --secret \
+        --org netzor \
+        --base-url 'https://${KEYCLOAK_HOSTNAME}' || true
+    kdestroy
+"
+
 # FREEIPA DNS
     # -p 53:53/udp -p 53:53 \
     # --dns=127.0.0.1,1.1.1.1,8.8.8.8 \
