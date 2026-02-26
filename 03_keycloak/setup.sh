@@ -137,18 +137,6 @@ else
     echo "ERROR: User '${MAIN_USER_USERNAME}' not found in netzor realm."
 fi
 
-# Block admin user in master realm
-echo "Blocking admin user in master realm..."
-ADMIN_USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r master -q username="${KEYCLOAK_ADMIN_USERNAME}" | jq -r '.[0].id')
-if [[ -n "$ADMIN_USER_ID" && "$ADMIN_USER_ID" != "null" ]]; then
-    podman exec keycloak /opt/keycloak/bin/kcadm.sh update users/"${ADMIN_USER_ID}" -r master -s enabled=false || {
-        echo "ERROR: Failed to block admin user in master realm."
-    }
-    echo "Admin user blocked successfully in master realm."
-else
-    echo "ERROR: Admin user not found in master realm."
-fi
-
 # Create OIDC Client for FreeIPA
 echo "Creating OIDC client for FreeIPA..."
 keycloak_create_oidc_client "${FREEIPA_OIDC_CLIENT_ID}" "${FREEIPA_OIDC_CLIENT_SECRET}" \
