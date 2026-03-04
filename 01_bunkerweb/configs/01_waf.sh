@@ -7,6 +7,9 @@ BUNKER_ENV+=(
     -e "${HOST}_REVERSE_PROXY_HOST=http://127.0.0.1:7000"
     -e "${HOST}_REVERSE_PROXY_INTERCEPT_ERRORS=no"
     -e "${HOST}_SECURITY_MODE=detect"
-    # Allow access to the UI from anywhere (can be restricted later if needed)
-    -e "${HOST}_USE_WHITELIST=no"
+    # Restringir acesso — apenas rede interna (JumpServer/PAM)
+    -e "${HOST}_USE_GREYLIST=yes"
+    -e "${HOST}_GREYLIST_IP=${WAF_SUBNET}"
+    -e "${HOST}_USE_BLACKLIST=yes"
+    -e "${HOST}_BLACKLIST_IP=0.0.0.0/0"
 )
