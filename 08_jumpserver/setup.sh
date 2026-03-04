@@ -51,17 +51,39 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         -e DB_USER=postgres \
         -e DB_PASSWORD=PleaseChangeMe \
         -e DB_NAME=jumpserver \
-        -e JMP_PASS="${JUMPSERVER_ADMIN_PASSWORD}" \
+        -e MAIN_USER="${MAIN_USER_USERNAME}" \
+        -e MAIN_DOMAIN="${DOMAIN}" \
         jumpserver /opt/py3/bin/python >/dev/null 2>&1 <<'EOF'
-import sys
+import sys, uuid
 sys.path.append('/opt/jumpserver/apps')
 import os, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jumpserver.settings')
 django.setup()
 from users.models import User
-u = User.objects.get(username='admin')
-u.set_password(os.environ.get('JMP_PASS'))
-u.save()
+
+main_user = os.environ.get('MAIN_USER')
+main_domain = os.environ.get('MAIN_DOMAIN')
+
+if main_user and main_domain:
+    email = f"{main_user}@{main_domain}"
+    try:
+        u = User.objects.get(username='admin')
+        u.username = main_user
+        u.name = main_user
+        u.email = email
+    except User.DoesNotExist:
+        try:
+            u = User.objects.get(username=main_user)
+        except User.DoesNotExist:
+            u = User(username=main_user, name=main_user, email=email)
+            
+    # As the user logs in via LDAP, we can use a randomized password
+    u.set_password(uuid.uuid4().hex)
+    u.is_active = True
+    u.is_superuser = True
+    if hasattr(u, 'role'):
+        u.role = 'Admin'
+    u.save()
 EOF
     then
         echo "JumpServer admin password configured successfully."
