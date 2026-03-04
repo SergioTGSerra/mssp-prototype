@@ -4,7 +4,8 @@ source utils.sh; script_init;
 # Criar network se não existir
 podman network exists waf_default || podman network create waf_default
 
-WAF_DNS=$(podman network inspect waf_default --format '{{(index .Subnets 0).Gateway}}')
+WAF_GATEWAY=$(podman network inspect waf_default --format '{{(index .Subnets 0).Gateway}}')
+WAF_SUBNET=$(podman network inspect waf_default --format '{{(index .Subnets 0).Subnet}}')
 
 # Variáveis dinâmicas do BunkerWeb
 BUNKER_ENV=()
@@ -30,7 +31,7 @@ else
     --network waf_default \
     -h ${BUNKERWEB_HOSTNAME} \
     --restart=always \
-    -e DNS_RESOLVERS="${WAF_DNS}" \
+    -e DNS_RESOLVERS="${WAF_GATEWAY}" \
     -p 80:8080/tcp \
     -p 443:8443/tcp \
     -p 443:8443/udp \
@@ -44,7 +45,7 @@ else
     -e LETS_ENCRYPT_CHALLENGE=dns \
     -e LETS_ENCRYPT_DNS_PROVIDER=cloudflare \
     -e USE_LETS_ENCRYPT_WILDCARD=yes \
-    -e USE_LETS_ENCRYPT_STAGING=yes \
+    -e USE_LETS_ENCRYPT_STAGING=no \
     -e AUTO_LETS_ENCRYPT=yes \
     -e LETS_ENCRYPT_DNS_CREDENTIAL_ITEM="${LETS_ENCRYPT_DNS_CREDENTIAL_ITEM}" \
     -e DISABLE_DEFAULT_SERVER=yes \
