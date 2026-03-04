@@ -84,6 +84,41 @@ if main_user and main_domain:
     if hasattr(u, 'role'):
         u.role = 'Admin'
     u.save()
+
+# --- Create Web Assets ---
+from orgs.utils import set_current_org
+from orgs.models import Organization
+from assets.models import Node, Asset, Protocol, Platform, Web
+
+org = Organization.objects.first()
+if org:
+    set_current_org(org.id)
+
+platform = Platform.objects.get(name='Website')
+
+# The root node in JumpServer is typically named DEFAULT
+default_node = Node.objects.first()
+
+urls = [
+    {"name": "WAF", "address": "https://waf.netzor.pt"},
+    {"name": "FreeIPA", "address": "https://ipa.netzor.pt"},
+    {"name": "Webmail", "address": "https://mail.netzor.pt"}
+]
+
+for item in urls:
+    web_asset, created = Web.objects.get_or_create(
+        name=item["name"],
+        address=item["address"],
+        platform=platform,
+        org_id=org.id if org else ''
+    )
+    if created:
+        if default_node:
+            web_asset.nodes.add(default_node)
+        web_asset.protocols.add(Protocol.objects.get_or_create(name='http', port=80)[0])
+        web_asset.protocols.add(Protocol.objects.get_or_create(name='https', port=443)[0])
+        print(f"Created Web Asset: {web_asset.name}")
+
 EOF
     then
         echo "JumpServer admin password configured successfully."
