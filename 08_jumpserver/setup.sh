@@ -30,7 +30,49 @@ else
      --tmpfs /opt/download:rw \
      --tmpfs /var/log/nginx:rw \
      -p 2222:2222 \
-     docker.io/jumpserver/jms_all:v4.10.15
+     docker.io/jumpserver/jms_all:v4.10.16
 
   podman network connect waf_default jumpserver
+fi
+
+# Set JumpServer default admin password (retrying to allow DB initialization)
+echo "Setting JumpServer default admin password..."
+MAX_RETRIES=15
+RETRY_COUNT=0
+SUCCESS=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    # Run python script inside the container to change the admin password non-interactively
+    if podman exec -i \
+        -e REDIS_PASSWORD=PleaseChangeMe \
+        -e DB_ENGINE=postgresql \
+        -e DB_HOST=127.0.0.1 \
+        -e DB_PORT=5432 \
+        -e DB_USER=postgres \
+        -e DB_PASSWORD=PleaseChangeMe \
+        -e DB_NAME=jumpserver \
+        -e JMP_PASS="${JUMPSERVER_ADMIN_PASSWORD}" \
+        jumpserver /opt/py3/bin/python >/dev/null 2>&1 <<'EOF'
+import sys
+sys.path.append('/opt/jumpserver/apps')
+import os, django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jumpserver.settings')
+django.setup()
+from users.models import User
+u = User.objects.get(username='admin')
+u.set_password(os.environ.get('JMP_PASS'))
+u.save()
+EOF
+    then
+        echo "JumpServer admin password configured successfully."
+        SUCCESS=1
+        break
+    else
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        sleep 10
+    fi
+done
+
+if [ $SUCCESS -eq 0 ]; then
+    echo "Warning: Failed to set JumpServer admin password automatically. The system might take longer to initialize."
 fi
