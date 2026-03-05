@@ -63,6 +63,10 @@ fields.full-name = \"name\"
 [directory.\"keycloak\".tls]
 implicit = true
 allow-invalid-certs = false
+
+[authentication.master]
+user = \"${MAILSERVER_MASTER_USERNAME}\"
+secret = \"${MAILSERVER_MASTER_PASSWORD}\"
 OIDCEOF
 "
         
