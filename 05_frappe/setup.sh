@@ -23,8 +23,32 @@ podman compose \
   -f overrides/compose.redis.yaml \
   up -d
 
-podman exec frappe-backend bench new-site erp.netzor.pt --admin-password=admin --db-root-password=123 --mariadb-user-host-login-scope='%' --install-app erpnext --install-app hrms
+podman exec frappe-backend bench new-site erp.netzor.pt --admin-password="${FRAPPE_ADMIN_PASSWORD}" --db-root-password=123 --mariadb-user-host-login-scope='%' --install-app erpnext --install-app hrms
 podman exec frappe-backend bench --site erp.netzor.pt set-config host_name "https://${FRAPPE_HOSTNAME}"
+
+# ── Create main user as System Manager (admin) ───────────────────────────────
+echo ">> Creating admin user ${MAIN_USER_USERNAME}@${DOMAIN}..."
+podman exec frappe-backend bench --site erp.netzor.pt execute frappe.client.insert --kwargs "$(cat <<PYEOF
+{
+    "doc": {
+        "doctype": "User",
+        "email": "${MAIN_USER_USERNAME}@${DOMAIN}",
+        "first_name": "${MAIN_USER_FIRSTNAME}",
+        "last_name": "${MAIN_USER_LASTNAME}",
+        "new_password": "${MAIN_USER_PASSWORD}",
+        "send_welcome_email": 0,
+        "user_type": "System User",
+        "roles": [
+            {"role": "System Manager"}
+        ]
+    }
+}
+PYEOF
+)"
+
+# ── Disable username/password login (force Keycloak SSO only) ─────────────────
+echo ">> Disabling username/password login (Keycloak SSO only)..."
+podman exec frappe-backend bench --site erp.netzor.pt set-config disable_user_pass_login 1
 
 # ── Keycloak OIDC Client for Frappe/ERPNext ──────────────────────────────────
 
