@@ -64,11 +64,6 @@ podman exec -u www-data nextcloud-aio-nextcloud php occ user_oidc:provider keycl
 # # Enable store_login_token for OIDC tokens
 podman exec -u www-data nextcloud-aio-nextcloud php occ config:app:set user_oidc store_login_token --value=1
 
-# Install mail_oidc_bridge app
-echo ">> Installing mail_oidc_bridge app..."
-podman cp apps/mail_oidc_bridge nextcloud-aio-nextcloud:/var/www/html/custom_apps/
-podman exec nextcloud-aio-nextcloud chown -R www-data:www-data /var/www/html/custom_apps/mail_oidc_bridge
-podman exec -u www-data nextcloud-aio-nextcloud php occ app:enable mail_oidc_bridge
 
 # # Configure Mail provisioning (auto-creates mail accounts for users)
 echo ">> Configuring Mail provisioning..."
@@ -93,12 +88,12 @@ else
         provisioning_domain, email_template, 
         imap_user, imap_host, imap_port, imap_ssl_mode,
         smtp_user, smtp_host, smtp_port, smtp_ssl_mode,
-        sieve_enabled, ldap_aliases_provisioning, master_password_enabled
+        sieve_enabled, ldap_aliases_provisioning, master_password_enabled, master_password
     ) VALUES (
         'netzor.pt', '%EMAIL%',
-        '%EMAIL%', '${MAILSERVER_HOSTNAME}', 143, 'none',
-        '%EMAIL%', '${MAILSERVER_HOSTNAME}', 587, 'none',
-        false, false, false
+        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 143, 'none',
+        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 587, 'none',
+        false, false, true, '${MAILSERVER_MASTER_PASSWORD}'
     ) ON CONFLICT (provisioning_domain) DO NOTHING;
     "
     echo ">> Mail provisioning configured."
