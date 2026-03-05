@@ -46,9 +46,24 @@ podman exec frappe-backend bench --site erp.netzor.pt execute frappe.client.inse
 PYEOF
 )"
 
+echo ">> Granting all roles to ${MAIN_USER_USERNAME}@${DOMAIN}..."
+podman exec -i frappe-backend bench --site erp.netzor.pt console <<PYEOF
+user = frappe.get_doc("User", "${MAIN_USER_USERNAME}@${DOMAIN}")
+roles = frappe.get_all("Role", filters={"disabled": 0, "name": ["not in", ["Guest", "All"]]}, pluck="name")
+user.add_roles(*roles)
+user.block_modules = []
+user.save()
+frappe.db.commit()
+exit()
+PYEOF
+
 # ── Disable username/password login (force Keycloak SSO only) ─────────────────
 echo ">> Disabling username/password login (Keycloak SSO only)..."
-podman exec frappe-backend bench --site erp.netzor.pt set-config disable_user_pass_login 1
+podman exec -i frappe-backend bench --site erp.netzor.pt console <<PYEOF
+frappe.db.set_value("System Settings", "System Settings", "disable_user_pass_login", 1)
+frappe.db.commit()
+exit()
+PYEOF
 
 # ── Keycloak OIDC Client for Frappe/ERPNext ──────────────────────────────────
 
