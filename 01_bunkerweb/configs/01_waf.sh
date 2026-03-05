@@ -6,6 +6,7 @@ BUNKER_ENV+=(
     -e "${HOST}_USE_REVERSE_PROXY=yes"
     -e "${HOST}_REVERSE_PROXY_HOST=http://127.0.0.1:7000"
     -e "${HOST}_REVERSE_PROXY_INTERCEPT_ERRORS=no"
+    -e "${HOST}_REVERSE_PROXY_WS=yes"
     -e "${HOST}_SECURITY_MODE=detect"
     # Restringir acesso — apenas rede interna (JumpServer/PAM)
     -e "${HOST}_USE_GREYLIST=yes"

@@ -4,6 +4,7 @@ SERVER_NAMES+=("$HOST")
 BUNKER_ENV+=(
     -e "${HOST}_USE_REVERSE_PROXY=yes"
     -e "${HOST}_REVERSE_PROXY_HOST=https://mailserver"
+    -e "${HOST}_REVERSE_PROXY_WS=yes"
     -e "${HOST}_SECURITY_MODE=detect"
     # Restringir acesso — apenas rede interna (JumpServer/PAM)
     -e "${HOST}_USE_GREYLIST=yes"
