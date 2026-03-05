@@ -1,6 +1,6 @@
 services:
   glpi:
-    image: docker.io/glpi/glpi:11.0.5
+    image: docker.io/glpi/glpi:11.0.6
     container_name: glpi
     networks:
       - default
@@ -24,7 +24,7 @@ services:
         condition: service_healthy
 
   glpi-db:
-    image: mariadb:12.1
+    image: mariadb:12.2
     container_name: glpi-db
     volumes:
       - glpi-db:/var/lib/mysql
