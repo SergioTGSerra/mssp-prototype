@@ -78,7 +78,7 @@ dn = \"${STALWART_LDAP_BIND_DN}\"
 secret = \"${STALWART_LDAP_BIND_PASSWORD}\"
 
 [directory.\"ldap\".auth]
-method = \"bind\"
+method = \"lookup\"
 
 [directory.\"ldap\".filter]
 name = \"(&(objectClass=posixAccount)(mail=?))\"
