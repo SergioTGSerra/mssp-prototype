@@ -69,22 +69,28 @@ allow-invalid-certs = false
 
 [directory.\"ldap\"]
 type = \"ldap\"
-url = \"ldaps://${FREEIPA_HOSTNAME}\"
-base-dn = \"${FREEIPA_BASE_DN}\"
+url = \"ldap://${FREEIPA_HOSTNAME}:389\"
+base-dn = \"cn=users,cn=accounts,dc=netzor,dc=pt\"
 timeout = \"10s\"
 
 [directory.\"ldap\".bind]
 dn = \"${STALWART_LDAP_BIND_DN}\"
 secret = \"${STALWART_LDAP_BIND_PASSWORD}\"
 
+[directory.\"ldap\".auth]
+method = \"bind\"
+
 [directory.\"ldap\".filter]
-name = \"(&(|(objectClass=person)(objectClass=inetOrgPerson))(uid=%s))\"
-email = \"(&(|(objectClass=person)(objectClass=inetOrgPerson))(|(mail=%s)(uid=%s)))\"
+name = \"(&(objectClass=posixAccount)(mail=?))\"
+email = \"(&(objectClass=posixAccount)(mail=?))\"
 
 [directory.\"ldap\".attributes]
-name = \"uid\"
+name = \"mail\"
 email = \"mail\"
 description = \"cn\"
+secret = \"userPassword\"
+secret-changed = \"krbLastPwdChange\"
+groups = \"memberOf\"
 
 [directory.\"ldap\".tls]
 implicit = true
@@ -93,6 +99,7 @@ allow-invalid-certs = true
 [authentication.master]
 user = \"${MAILSERVER_MASTER_USERNAME}\"
 secret = \"${MAILSERVER_MASTER_PASSWORD}\"
+
 OIDCEOF
 "
         
