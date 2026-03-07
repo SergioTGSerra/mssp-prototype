@@ -19,6 +19,9 @@ else
         "serviceAccountsEnabled=true" \
         "standardFlowEnabled=true"
 
+    # Create stalwart-bind system user in FreeIPA
+    freeipa_create_system_account "stalwart-bind" "Stalwart" "Bind" "${STALWART_LDAP_BIND_PASSWORD}" "Stalwart LDAP Bind System Account"
+
     podman run -d -t \
         --network stalwart_default \
         -p 25:25 -p 587:587 -p 465:465 \
@@ -26,6 +29,7 @@ else
         -p 110:110 -p 995:995 \
         -v stalwart:/opt/stalwart \
         --add-host "${KEYCLOAK_HOSTNAME}:host-gateway" \
+        --add-host "${FREEIPA_HOSTNAME}:host-gateway" \
         --name mailserver docker.io/stalwartlabs/stalwart:v0.15.5-alpine
         
     podman network connect waf_default mailserver 2>/dev/null || true
@@ -57,12 +61,34 @@ timeout = \"5s\"
 endpoint.url = \"https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/openid-connect/userinfo\"
 endpoint.method = \"userinfo\"
 fields.email = \"email\"
-fields.username = \"preferred_username\"
 fields.full-name = \"name\"
 
 [directory.\"keycloak\".tls]
 implicit = true
 allow-invalid-certs = false
+
+[directory.\"ldap\"]
+type = \"ldap\"
+url = \"ldaps://${FREEIPA_HOSTNAME}\"
+base-dn = \"${FREEIPA_BASE_DN}\"
+timeout = \"10s\"
+
+[directory.\"ldap\".bind]
+dn = \"${STALWART_LDAP_BIND_DN}\"
+secret = \"${STALWART_LDAP_BIND_PASSWORD}\"
+
+[directory.\"ldap\".filter]
+name = \"(&(|(objectClass=person)(objectClass=inetOrgPerson))(uid=%s))\"
+email = \"(&(|(objectClass=person)(objectClass=inetOrgPerson))(|(mail=%s)(uid=%s)))\"
+
+[directory.\"ldap\".attributes]
+name = \"uid\"
+email = \"mail\"
+description = \"cn\"
+
+[directory.\"ldap\".tls]
+implicit = true
+allow-invalid-certs = true
 
 [authentication.master]
 user = \"${MAILSERVER_MASTER_USERNAME}\"
@@ -78,7 +104,7 @@ OIDCEOF
     # Ensure directory is set to 'keycloak' (idempotent check)
     if podman exec mailserver grep -q 'directory = "internal"' /opt/stalwart/etc/config.toml 2>/dev/null; then
         echo "Switching authentication directory to 'keycloak'..."
-        podman exec mailserver sed -i 's/directory = "internal"/directory = "keycloak"/' /opt/stalwart/etc/config.toml
+        podman exec mailserver sed -i 's/directory = "internal"/directory = "ldap"/' /opt/stalwart/etc/config.toml
         podman restart mailserver
         sleep 5
     fi
