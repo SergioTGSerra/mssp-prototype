@@ -4,14 +4,13 @@
 - [x] BunkerWeb (WAF)
 - [x] FreeIPA (LDAP/Kerberos)
 - [x] Keycloak (SSO/IdP)
-- [x] Mail Server + Roundcube
+- [x] Stalwart (Mail Server)
 - [x] Nextcloud AIO
+- [x] ERPNext (ERP / Frappe HRMS)
 - [x] GLPI (ITSM)
 - [x] IRIS (DFIR)
-- [x] n8n (Automation)
-- [x] Guacamole (Remote Access)
 - [x] JumpServer (PAM)
-- [x] ERPNext (ERP)
+- [x] Zabbix (Monitoring)
 
 ---
 
@@ -23,24 +22,24 @@
   - Agentes para endpoints
   - Alertas para n8n/Shuffle
 
-### Monitorização
-- [ ] **Zabbix** - Monitoring + Alerting
-  - Integração com Keycloak SSO (SAML)
-  - Templates para serviços existentes
-  - Alertas para n8n
+### Acesso Remoto / Redes
+- [ ] **Netbird** - Zero Trust Networking / VPN
+  - Rede Mesh Privada
+  - Integração com Keycloak (SSO)
+- [ ] **Guacamole** - Clientless Remote Desktop Gateway
 
-
-### SOAR / Threat Intelligence
+### Automação / SOAR
+- [ ] **n8n** - Workflow Automation Platform
 - [ ] **Shuffle SOAR** - Security Orchestration
   - Integração com Wazuh
   - Integração com MISP
   - Playbooks automáticos
 
+### Threat Intelligence
 - [ ] **MISP** - Threat Intelligence Platform
   - Feeds de IOCs
   - Integração com Wazuh
   - Partilha com comunidade
-
 
 ### Outros / Documentação
 - [ ] **BookStack** - Wiki / Documentação
@@ -51,8 +50,8 @@
 
 ## 📋 Prioridades Sugeridas
 
-1. **Wazuh** - Base de segurança/SIEM
-2. **Zabbix** - Monitorização de infraestrutura
+1. **Netbird** - Rede seguras
+2. **Wazuh** - Base de segurança/SIEM
 3. **Shuffle SOAR** - Automação de resposta
 4. **MISP** - Threat intelligence
 5. **BookStack** - Documentação
