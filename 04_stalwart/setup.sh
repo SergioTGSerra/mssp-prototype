@@ -77,7 +77,7 @@ timeout = \"10s\"
 dn = \"${STALWART_LDAP_BIND_DN}\"
 secret = \"${STALWART_LDAP_BIND_PASSWORD}\"
 
-[directory.\"ldap\".auth]
+[directory.\"ldap\".bind.auth]
 method = \"lookup\"
 
 [directory.\"ldap\".filter]
@@ -86,6 +86,7 @@ email = \"(&(objectClass=posixAccount)(mail=?))\"
 
 [directory.\"ldap\".attributes]
 name = \"mail\"
+class = \"objectClass\"
 email = \"mail\"
 description = \"cn\"
 secret = \"userPassword\"
