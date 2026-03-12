@@ -109,6 +109,36 @@ OIDCEOF
         sleep 5
     fi
 
+    # Configure ACME DNS-01 with Cloudflare for automatic TLS certificates
+    if podman exec mailserver grep -q 'acme."letsencrypt"' /opt/stalwart/etc/config.toml 2>/dev/null; then
+        echo "ACME configuration already present."
+    else
+        echo "Appending ACME DNS-01 configuration to config.toml..."
+
+        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml <<ACMEEOF
+
+[acme.\"letsencrypt\"]
+directory = \"https://acme-v02.api.letsencrypt.org/directory\"
+challenge = \"dns-01\"
+contact = [\"postmaster@${DOMAIN}\"]
+domains = [\"${MAILSERVER_HOSTNAME}\"]
+cache = \"%{BASE_PATH}%/etc/acme\"
+renew-before = \"30d\"
+provider = \"cloudflare\"
+secret = \"${CLOUDFLARE_API_TOKEN}\"
+polling-interval = \"15s\"
+propagation-timeout = \"2m\"
+ttl = \"5m\"
+timeout = \"30s\"
+
+ACMEEOF
+"
+
+        echo "Restarting Stalwart to apply ACME configuration..."
+        podman restart mailserver
+        sleep 5
+    fi
+
     # Ensure directory is set to 'keycloak' (idempotent check)
     if podman exec mailserver grep -q 'directory = "internal"' /opt/stalwart/etc/config.toml 2>/dev/null; then
         echo "Switching authentication directory to 'keycloak'..."
