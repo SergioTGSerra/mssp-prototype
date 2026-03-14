@@ -124,6 +124,7 @@ contact = [\"postmaster@${DOMAIN}\"]
 domains = [\"${MAILSERVER_HOSTNAME}\"]
 cache = \"%{BASE_PATH}%/etc/acme\"
 renew-before = \"30d\"
+default = true
 provider = \"cloudflare\"
 secret = \"${CLOUDFLARE_API_TOKEN}\"
 polling-interval = \"15s\"
