@@ -91,8 +91,8 @@ else
         sieve_enabled, ldap_aliases_provisioning, master_password_enabled, master_password
     ) VALUES (
         'netzor.pt', '%EMAIL%',
-        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 143, 'none',
-        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 587, 'none',
+        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 993, 'ssl',
+        '%EMAIL%%${MAILSERVER_MASTER_USERNAME}', '${MAILSERVER_HOSTNAME}', 465, 'ssl',
         false, false, true, '${MAILSERVER_MASTER_PASSWORD}'
     ) ON CONFLICT (provisioning_domain) DO NOTHING;
     "
