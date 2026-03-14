@@ -91,7 +91,6 @@ email = \"mail\"
 description = \"cn\"
 secret = \"userPassword\"
 secret-changed = \"krbLastPwdChange\"
-groups = \"memberOf\"
 
 [directory.\"ldap\".tls]
 implicit = true
@@ -105,6 +104,48 @@ OIDCEOF
 "
         
         echo "Restarting Stalwart to apply changes..."
+        podman restart mailserver
+        sleep 5
+    fi
+
+    # Check if Email Folders are explicitly configured
+    if podman exec mailserver grep -q '\[email.folders.sent\]' /opt/stalwart/etc/config.toml 2>/dev/null; then
+        echo "Email special folders configuration already present."
+    else
+        echo "Appending Email special folders configuration to config.toml..."
+        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml << 'FOLDERSEOF'
+
+[email.folders.sent]
+name = \"Sent\"
+create = true
+subscribe = true
+
+[email.folders.trash]
+name = \"Trash\"
+create = true
+subscribe = true
+
+[email.folders.drafts]
+name = \"Drafts\"
+create = true
+subscribe = true
+
+[email.folders.junk]
+name = \"Junk\"
+create = true
+subscribe = true
+
+[email.folders.archive]
+name = \"Archive\"
+create = true
+subscribe = true
+
+[email.folders.shared]
+enable = false
+
+FOLDERSEOF
+"
+        echo "Restarting Stalwart to apply special folders..."
         podman restart mailserver
         sleep 5
     fi
