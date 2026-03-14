@@ -46,14 +46,14 @@ else
         exit 1
     fi
 
-    # Check if OIDC is already configured
+    # Configure Stalwart
     if podman exec mailserver grep -q 'directory."keycloak"' /opt/stalwart/etc/config.toml 2>/dev/null; then
-        echo "OIDC configuration already present."
+        echo "Configuration already present."
     else
-        echo "Appending OIDC configuration to config.toml..."
+        echo "Appending configuration to config.toml..."
         
         # We append to the config file inside the container
-        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml << 'OIDCEOF'
+        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml << 'EOF'
 
 [directory.\"keycloak\"]
 type = \"oidc\"
@@ -100,21 +100,6 @@ allow-invalid-certs = true
 user = \"${MAILSERVER_MASTER_USERNAME}\"
 secret = \"${MAILSERVER_MASTER_PASSWORD}\"
 
-OIDCEOF
-"
-        
-        echo "Restarting Stalwart to apply changes..."
-        podman restart mailserver
-        sleep 5
-    fi
-
-    # Check if Email Folders are explicitly configured
-    if podman exec mailserver grep -q '\[email.folders.sent\]' /opt/stalwart/etc/config.toml 2>/dev/null; then
-        echo "Email special folders configuration already present."
-    else
-        echo "Appending Email special folders configuration to config.toml..."
-        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml << 'FOLDERSEOF'
-
 [email.folders.sent]
 name = \"Sent\"
 create = true
@@ -143,21 +128,6 @@ subscribe = true
 [email.folders.shared]
 enable = false
 
-FOLDERSEOF
-"
-        echo "Restarting Stalwart to apply special folders..."
-        podman restart mailserver
-        sleep 5
-    fi
-
-    # Configure ACME DNS-01 with Cloudflare for automatic TLS certificates
-    if podman exec mailserver grep -q 'acme."letsencrypt"' /opt/stalwart/etc/config.toml 2>/dev/null; then
-        echo "ACME configuration already present."
-    else
-        echo "Appending ACME DNS-01 configuration to config.toml..."
-
-        podman exec mailserver sh -c "cat >> /opt/stalwart/etc/config.toml <<ACMEEOF
-
 [acme.\"letsencrypt\"]
 directory = \"https://acme-v02.api.letsencrypt.org/directory\"
 challenge = \"dns-01\"
@@ -173,18 +143,13 @@ propagation-timeout = \"2m\"
 ttl = \"5m\"
 timeout = \"30s\"
 
-ACMEEOF
+EOF
 "
-
-        echo "Restarting Stalwart to apply ACME configuration..."
-        podman restart mailserver
-        sleep 5
-    fi
-
-    # Ensure directory is set to 'keycloak' (idempotent check)
-    if podman exec mailserver grep -q 'directory = "internal"' /opt/stalwart/etc/config.toml 2>/dev/null; then
-        echo "Switching authentication directory to 'keycloak'..."
+        
+        echo "Switching authentication directory to 'ldap'..."
         podman exec mailserver sed -i 's/directory = "internal"/directory = "ldap"/' /opt/stalwart/etc/config.toml
+
+        echo "Restarting Stalwart to apply changes..."
         podman restart mailserver
         sleep 5
     fi
