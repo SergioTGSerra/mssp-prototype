@@ -30,7 +30,7 @@ else
         -v stalwart:/opt/stalwart \
         --add-host "${KEYCLOAK_HOSTNAME}:host-gateway" \
         --add-host "${FREEIPA_HOSTNAME}:host-gateway" \
-        --name mailserver docker.io/stalwartlabs/stalwart:v0.15.5-alpine
+        --name mailserver docker.io/stalwartlabs/stalwart:v0.15.5
         
     podman network connect waf_default mailserver 2>/dev/null || true
 
