@@ -113,3 +113,26 @@ else
          exit 1
     fi
 fi
+
+echo ">> Configuring vm.overcommit_memory..."
+if sysctl vm.overcommit_memory | grep -q '1'; then
+    echo -e "${GREEN}vm.overcommit_memory is already set to 1!${NC}"
+else
+    echo -e "${RED}vm.overcommit_memory is not set to 1. Configuring...${NC}"
+    if [ "$(id -u)" -eq 0 ]; then
+        sysctl vm.overcommit_memory=1
+        if grep -q "^vm.overcommit_memory" /etc/sysctl.conf; then
+            sed -i 's/^vm.overcommit_memory.*/vm.overcommit_memory = 1/' /etc/sysctl.conf
+        else
+            echo "vm.overcommit_memory = 1" >> /etc/sysctl.conf
+        fi
+    else
+        sudo sysctl vm.overcommit_memory=1
+        if grep -q "^vm.overcommit_memory" /etc/sysctl.conf; then
+            sudo sed -i 's/^vm.overcommit_memory.*/vm.overcommit_memory = 1/' /etc/sysctl.conf
+        else
+            echo "vm.overcommit_memory = 1" | sudo tee -a /etc/sysctl.conf > /dev/null
+        fi
+    fi
+    echo -e "${GREEN}vm.overcommit_memory configured successfully!${NC}"
+fi
