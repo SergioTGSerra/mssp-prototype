@@ -51,6 +51,7 @@ else
     -e DISABLE_DEFAULT_SERVER=yes \
     -e DISABLE_DEFAULT_SERVER_STRICT_SNI=yes \
     -e USE_LIMIT_REQ=no \
+    -e USE_LIMIT_CONN=no \
     -e MULTISITE=yes \
     -e SERVER_NAME="${SERVER_NAMES[*]}" \
     "${BUNKER_ENV[@]}" \
