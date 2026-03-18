@@ -130,6 +130,31 @@ INSERT INTO glpi_plugin_samlsso_configs (
 EOF
     echo "SAML Plugin configured successfully."
 
+    # Pre-provision master user with Super-Admin permissions (before SAML login)
+    echo "Pre-provisioning master user '${MAIN_USER_USERNAME}@${DOMAIN}' with Super-Admin profile..."
+    SAML_CONFIG_ID=$(podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -N -e "SELECT id FROM glpi_plugin_samlsso_configs WHERE name='Keycloak' LIMIT 1;")
+
+    podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "
+    INSERT INTO glpi_users (name, realname, firstname, authtype, auths_id, is_active, date_creation, date_mod)
+    SELECT '${MAIN_USER_USERNAME}@${DOMAIN}', '${MAIN_USER_LASTNAME}', '${MAIN_USER_FIRSTNAME}', 4, ${SAML_CONFIG_ID:-1}, 1, NOW(), NOW()
+    FROM DUAL
+    WHERE NOT EXISTS (SELECT 1 FROM glpi_users WHERE name='${MAIN_USER_USERNAME}@${DOMAIN}');
+    "
+
+    MASTER_USER_ID=$(podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -N -e "SELECT id FROM glpi_users WHERE name='${MAIN_USER_USERNAME}@${DOMAIN}';")
+
+    if [ ! -z "$MASTER_USER_ID" ]; then
+        podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "
+        INSERT INTO glpi_profiles_users (users_id, profiles_id, entities_id, is_recursive, is_dynamic)
+        SELECT ${MASTER_USER_ID}, 4, 0, 1, 0
+        FROM DUAL
+        WHERE NOT EXISTS (SELECT 1 FROM glpi_profiles_users WHERE users_id=${MASTER_USER_ID} AND profiles_id=4);
+        "
+        echo "Master user '${MAIN_USER_USERNAME}@${DOMAIN}' pre-provisioned with Super-Admin profile successfully."
+    else
+        echo "Warning: Failed to pre-provision master user."
+    fi
+
     # Deactivate default "Root" authorization rule and unset default profile
     # This ensures new users don't get 'Self-Service' in 'Root Entity' by default
     #podman exec glpi-db mariadb -u "${GLPI_DB_USER}" -p"${GLPI_DB_PASSWORD}" "${GLPI_DB_NAME}" -e "UPDATE glpi_rules SET is_active = 0 WHERE name = 'Root' AND sub_type = 'RuleRight';"
