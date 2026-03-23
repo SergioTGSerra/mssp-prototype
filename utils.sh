@@ -115,6 +115,93 @@ keycloak_create_oidc_client() {
     fi
 }
 
+# Create a SAML client in Keycloak (idempotent).
+# Automatically authenticates with Keycloak Admin CLI using env vars.
+#
+# Usage:
+#   keycloak_create_saml_client <client_id> <redirect_uris> [root_url] [attributes] [extra_args...]
+#
+# Arguments:
+#   client_id      - The client ID / entity ID (e.g. "https://glpi.example.com/")
+#   redirect_uris  - JSON array string of redirect URIs (e.g. '["https://example.com/*"]')
+#   root_url       - (optional) Root URL for the client (e.g. "https://example.com")
+#   attributes     - (optional) JSON object string of extra attributes
+#                    (e.g. '{"saml_force_post_binding":"true", "saml_name_id_format":"email"}')
+#   extra_args...  - (optional) Additional -s flags to pass to kcadm.sh
+#
+# Returns 0 on success (or if client already exists), 1 on error.
+keycloak_create_saml_client() {
+    local client_id="$1"
+    local redirect_uris="$2"
+    local root_url="${3:-}"
+    local attributes="${4:-}"
+    shift 4 2>/dev/null || true
+
+    if [ -z "$client_id" ] || [ -z "$redirect_uris" ]; then
+        echo "ERROR: keycloak_create_saml_client requires at least client_id and redirect_uris."
+        return 1
+    fi
+
+    if ! podman inspect keycloak > /dev/null 2>&1; then
+        echo "ERROR: Keycloak container not found. Cannot create SAML client '${client_id}'."
+        return 1
+    fi
+
+    # Authenticate (silent unless error)
+    if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials \
+        --server http://"${KEYCLOAK_HOSTNAME}" \
+        --realm master \
+        --user "${KEYCLOAK_ADMIN_USERNAME}" \
+        --password "${KEYCLOAK_ADMIN_PASSWORD}" > /dev/null 2>&1; then
+        echo "ERROR: Failed to authenticate with Keycloak."
+        return 1
+    fi
+
+    echo ">> Creating SAML client '${client_id}' in Keycloak..."
+
+    # Check if client already exists
+    if podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor \
+        -q clientId="${client_id}" --fields clientId 2>/dev/null | grep -q "${client_id}"; then
+        echo ">> SAML client '${client_id}' already exists."
+        return 0
+    fi
+
+    # Build the create command
+    local cmd=(
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients -r netzor
+        -s "clientId=${client_id}"
+        -s "name=${client_id}"
+        -s "enabled=true"
+        -s "protocol=saml"
+        -s "redirectUris=${redirect_uris}"
+        -s "frontchannelLogout=true"
+    )
+
+    # Add optional root URL and base URL
+    if [ -n "$root_url" ]; then
+        cmd+=(-s "rootUrl=${root_url}")
+        cmd+=(-s "baseUrl=${root_url}")
+    fi
+
+    # Add optional attributes
+    if [ -n "$attributes" ]; then
+        cmd+=(-s "attributes=${attributes}")
+    fi
+
+    # Add any extra arguments
+    for arg in "$@"; do
+        cmd+=(-s "$arg")
+    done
+
+    if "${cmd[@]}" > /dev/null 2>&1; then
+        echo ">> SAML client '${client_id}' created successfully."
+        return 0
+    else
+        echo ">> ERROR: Failed to create SAML client '${client_id}'."
+        return 1
+    fi
+}
+
 # ── FreeIPA Utilities ─────────────────────────────────────────────────────────
 
 # Create a system account in FreeIPA (idempotent).
