@@ -65,7 +65,7 @@ services:
       zabbix-server:
         condition: service_started
     environment:
-      ZBX_HOSTNAME: zabbix-agent
+      ZBX_HOSTNAME: "Zabbix server"
       ZBX_SERVER_HOST: zabbix-server
       ZBX_ACTIVE_ALLOW: "true"
 
