@@ -99,6 +99,34 @@ else
     fi
 fi
 
+echo ">> Checking curl..."
+if command -v curl &> /dev/null; then
+    echo -e "${GREEN}curl is already installed!${NC}"
+else
+    echo -e "${RED}curl not found. Installing...${NC}"
+    install_package "curl"
+    if [ $? -eq 0 ]; then
+         echo -e "${GREEN}curl installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install curl.${NC}"
+         exit 1
+    fi
+fi
+
+echo ">> Checking OpenSSL..."
+if command -v openssl &> /dev/null; then
+    echo -e "${GREEN}OpenSSL is already installed!${NC}"
+else
+    echo -e "${RED}OpenSSL not found. Installing...${NC}"
+    install_package "openssl"
+    if [ $? -eq 0 ]; then
+         echo -e "${GREEN}OpenSSL installed successfully!${NC}"
+    else
+         echo -e "${RED}Failed to install OpenSSL.${NC}"
+         exit 1
+    fi
+fi
+
 echo ">> Checking docker-compose..."
 if dnf list installed docker-compose-plugin &> /dev/null; then
     echo -e "${GREEN}docker compose já está instalado!${NC}"

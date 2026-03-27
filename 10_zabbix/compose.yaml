@@ -53,6 +53,12 @@ services:
       POSTGRES_PASSWORD: ${ZABBIX_DB_PASSWORD}
       PHP_TZ: Europe/Lisbon
       ZBX_SERVER_NAME: Zabbix Netzor
+      ZBX_SSO_SETTINGS: "{'baseurl': 'https://${ZABBIX_HOSTNAME}/', 'use_proxy_headers': true, 'strict': false, 'sp': {'NameIDFormat': 'urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress'}}"
+      ZBX_SSO_SP_KEY: /etc/zabbix/web/certs/sp.key
+      ZBX_SSO_SP_CERT: /etc/zabbix/web/certs/sp.crt
+      ZBX_SSO_IDP_CERT: /etc/zabbix/web/certs/idp.crt
+    volumes:
+      - ./certs:/etc/zabbix/web/certs:Z
     networks:
       - default
       - waf_default
