@@ -1,3 +1,5 @@
+ZABBIX_SAML_SP_ENTITY_ID="${ZABBIX_SAML_SP_ENTITY_ID:-https://${ZABBIX_HOSTNAME}/}"
+
 keycloak_create_saml_client \
     "${ZABBIX_SAML_SP_ENTITY_ID}" \
     "[\"https://${ZABBIX_HOSTNAME}/index_sso.php*\", \"https://${ZABBIX_HOSTNAME}/\"]" \

@@ -1,3 +1,5 @@
+GLPI_CLIENT_ID="${GLPI_CLIENT_ID:-https://${GLPI_HOSTNAME}/}"
+
 keycloak_create_saml_client \
     "${GLPI_CLIENT_ID}" \
     "[\"https://${GLPI_HOSTNAME}/*\"]" \
