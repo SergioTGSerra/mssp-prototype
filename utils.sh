@@ -92,7 +92,7 @@ keycloak_create_oidc_client() {
         -s "redirectUris=${redirect_uris}"
         -s "publicClient=false"
         -s "protocol=openid-connect"
-        -s 'defaultClientScopes=["profile", "openid", "email"]'
+        -s 'defaultClientScopes=["profile", "email"]'
     )
 
     # Add optional web origins
