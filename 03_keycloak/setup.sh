@@ -1,9 +1,6 @@
 #!/bin/bash
 source utils.sh; script_init;
 
-# Add keycloak-bind system user to FreeIPA
-freeipa_create_system_account "keycloak-bind" "Keycloak" "Bind" "${KEYCLOAK_LDAP_BIND_PASSWORD}" "Keycloak Bind System Account"
-
 # Start Keycloak with Podman Compose
 echo "Starting Keycloak..."
 cd "$(dirname "$0")"

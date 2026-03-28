@@ -10,18 +10,6 @@ echo "Starting Stalwart Mail Server..."
 if podman container exists mailserver; then
   podman start mailserver
 else
-    # Create Keycloak OIDC Client for Mailserver
-    keycloak_create_oidc_client "mailserver" "${MAILSERVER_OIDC_CLIENT_SECRET}" \
-        '["*"]' \
-        '' \
-        '{"oauth2.device.authorization.grant.enabled":"true","oidc.ciba.grant.enabled":"false"}' \
-        "directAccessGrantsEnabled=true" \
-        "serviceAccountsEnabled=true" \
-        "standardFlowEnabled=true"
-
-    # Create stalwart-bind system user in FreeIPA
-    freeipa_create_system_account "stalwart-bind" "Stalwart" "Bind" "${STALWART_LDAP_BIND_PASSWORD}" "Stalwart LDAP Bind System Account"
-
     podman run -d -t \
         --network stalwart_default \
         -p 25:25 -p 587:587 -p 465:465 \
