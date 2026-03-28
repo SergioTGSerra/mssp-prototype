@@ -15,15 +15,18 @@ WAF_SUBNET=$(podman network inspect waf_default --format '{{(index .Subnets 0).S
 BUNKER_ENV=()
 SERVER_NAMES=()
 
-# Load all service-specific configurations from the configs directory
-CONFIG_DIR="$(dirname "$0")/configs"
-for config in "$CONFIG_DIR"/*.sh; do
-  if [ -f "$config" ]; then
-    # Source each config file to populate BUNKER_ENV and SERVER_NAMES
-    source "$config"
+# 1. Load core service configuration (mandatory)
+source "$(dirname "$0")/core.sh"
+
+# 2. Load integrations provided by other services
+# This looks for files named 'bunkerweb.sh' inside the 'integrations' folder of any other service
+PARENT_DIR="$(dirname "$(dirname "$0")")"
+for ext_config in "$PARENT_DIR"/*/integrations/bunkerweb.sh; do
+  if [ -f "$ext_config" ]; then
+    source "$ext_config"
+    echo "Loaded integration: $ext_config"
   fi
 done
-
 
 # Start or create the BunkerWeb container
 if podman container exists bunkerweb; then
