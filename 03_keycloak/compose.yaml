@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: keycloak_db_user
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
     volumes:
-      - keycloak-postgres-data:/var/lib/postgresql:Z
+      - keycloak-postgres:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U keycloak_db_user -d keycloak_db"]
       interval: 5s
@@ -55,5 +55,5 @@ networks:
     external: true
 
 volumes:
-  keycloak-postgres-data:
-    name: keycloak-postgres-data
+  keycloak-postgres:
+    name: keycloak-postgres
