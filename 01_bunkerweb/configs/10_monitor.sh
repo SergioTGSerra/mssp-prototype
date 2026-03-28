@@ -1,3 +1,4 @@
+# Zabbix Monitoring System Configuration
 HOST=$ZABBIX_HOSTNAME
 SERVER_NAMES+=("$HOST")
 

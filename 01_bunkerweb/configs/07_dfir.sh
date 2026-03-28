@@ -1,3 +1,4 @@
+# IRIS Incident Response Platform Configuration
 HOST=$IRIS_HOSTNAME
 SERVER_NAMES+=("$HOST")
 

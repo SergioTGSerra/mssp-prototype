@@ -1,3 +1,4 @@
+# Keycloak Authentication Service Configuration
 HOST=$KEYCLOAK_HOSTNAME
 SERVER_NAMES+=("$HOST")
 
@@ -6,6 +7,7 @@ BUNKER_ENV+=(
     -e "${HOST}_REVERSE_PROXY_HOST=http://keycloak"
     -e "${HOST}_REVERSE_PROXY_WS=yes"
     -e "${HOST}_SECURITY_MODE=detect"
-    # Desativar modificação de cookies para aplicações que gerem os seus próprios cookies
+    
+    # Disable cookie flag modification to allow the application to manage its own cookies
     -e "${HOST}_COOKIE_FLAGS="
 )

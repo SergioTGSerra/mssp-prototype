@@ -1,3 +1,4 @@
+# GLPI Asset Management Configuration
 HOST=$GLPI_HOSTNAME
 SERVER_NAMES+=("$HOST")
 

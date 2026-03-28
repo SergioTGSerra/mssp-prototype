@@ -1,3 +1,4 @@
+# FreeIPA Identity Management Configuration
 HOST=$FREEIPA_HOSTNAME
 SERVER_NAMES+=("$HOST")
 
@@ -6,7 +7,8 @@ BUNKER_ENV+=(
     -e "${HOST}_REVERSE_PROXY_HOST=https://freeipa"
     -e "${HOST}_REVERSE_PROXY_WS=yes"
     -e "${HOST}_SECURITY_MODE=detect"
-    # Restringir acesso — apenas rede interna (JumpServer/PAM)
+    
+    # Access Control - Restrict to internal network only
     -e "${HOST}_USE_GREYLIST=yes"
     -e "${HOST}_GREYLIST_IP=${WAF_SUBNET}"
     -e "${HOST}_USE_BLACKLIST=yes"

@@ -1,32 +1,38 @@
 #!/bin/bash
+# BunkerWeb Setup Script
+# Configures and starts the BunkerWeb instance
+# Load utilities and initialize the script environment
 source utils.sh; script_init;
 
-# Criar network se não existir
+# Ensure the required podman network exists for the WAF
 podman network exists waf_default || podman network create waf_default
 
+# Extract network details for dynamic configuration
 WAF_GATEWAY=$(podman network inspect waf_default --format '{{(index .Subnets 0).Gateway}}')
 WAF_SUBNET=$(podman network inspect waf_default --format '{{(index .Subnets 0).Subnet}}')
 
-# Variáveis dinâmicas do BunkerWeb
+# Initialize dynamic configuration variables
 BUNKER_ENV=()
 SERVER_NAMES=()
 
-# Diretório de configurações
+# Load all service-specific configurations from the configs directory
 CONFIG_DIR="$(dirname "$0")/configs"
-
 for config in "$CONFIG_DIR"/*.sh; do
   if [ -f "$config" ]; then
+    # Source each config file to populate BUNKER_ENV and SERVER_NAMES
     source "$config"
   fi
 done
 
+
+# Start or create the BunkerWeb container
 if podman container exists bunkerweb; then
   podman start bunkerweb
 else
   podman run -d \
     --name bunkerweb \
     --network waf_default \
-    -h ${BUNKERWEB_HOSTNAME} \
+    -h "${BUNKERWEB_HOSTNAME}" \
     --restart=always \
     -e DNS_RESOLVERS="${WAF_GATEWAY}" \
     -p 80:8080/tcp \
