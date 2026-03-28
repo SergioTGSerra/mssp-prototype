@@ -38,15 +38,6 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
     podman exec glpi php bin/console plugin:activate samlsso --no-interaction || {
         echo "Warning: Failed to activate SAML plugin."
     }
-    
-# Create Keycloak SAML client for GLPI
-    echo "Creating Keycloak SAML client for GLPI..."
-    GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
-    keycloak_create_saml_client \
-        "${GLPI_CLIENT_ID}" \
-        "[\"https://${GLPI_HOSTNAME}/*\"]" \
-        "https://${GLPI_HOSTNAME}" \
-        '{"saml_force_post_binding":"true", "saml_name_id_format":"email", "saml.force.post.binding":"true", "saml.signature.algorithm":"RSA_SHA256"}'
 
     # Configure SAML Plugin in GLPI Database
     echo "Configuring SAML Plugin settings in database..."
@@ -156,6 +147,7 @@ EOF
     # Strip headers from SP cert for Keycloak config
     CLEAN_SP_CERT=$(podman exec glpi cat /tmp/sp_cert.pem | grep -v "BEGIN CERTIFICATE" | grep -v "END CERTIFICATE" | tr -d '\r\n')
     
+    GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
     CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes)
     
     if [ ! -z "$CLIENT_UUID" ] && [ ! -z "$CLEAN_SP_CERT" ]; then

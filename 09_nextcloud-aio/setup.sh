@@ -36,13 +36,6 @@ echo ">> Configuring Nextcloud apps..."
 podman exec -u www-data nextcloud-aio-nextcloud php occ app:disable firstrunwizard
 podman exec -u www-data nextcloud-aio-nextcloud php occ app:install user_oidc || podman exec -u www-data nextcloud-aio-nextcloud php occ app:enable user_oidc
 
-# Create Nextcloud OIDC client
-
-keycloak_create_oidc_client "${NEXTCLOUD_OIDC_CLIENT_ID}" "${NEXTCLOUD_OIDC_CLIENT_SECRET}" \
-    "[\"https://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\", \"http://${NEXTCLOUD_HOSTNAME}/apps/user_oidc/code\"]" \
-    "[\"https://${NEXTCLOUD_HOSTNAME}\", \"http://${NEXTCLOUD_HOSTNAME}\"]" \
-    "{\"post.logout.redirect.uris\":\"https://${NEXTCLOUD_HOSTNAME}/*##http://${NEXTCLOUD_HOSTNAME}/*\"}"
-
 # Set skeleton directory to empty string
 podman exec -u www-data nextcloud-aio-nextcloud php occ config:system:set skeletondirectory --value=''
 # Set allow_multiple_user_backends to false
@@ -98,5 +91,3 @@ else
     "
     echo ">> Mail provisioning configured."
 fi
-
-# echo ">> Nextcloud OIDC and Mail configuration complete."
