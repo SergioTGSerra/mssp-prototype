@@ -272,3 +272,43 @@ freeipa_create_system_account() {
         return 1
     fi
 }
+
+# ── Execute Integrations ──────────────────────────────────────────────────────
+
+# Run all integration scripts meant for the CURRENT service, 
+# found in the 'integrations' folders of ALL other services.
+#
+# Usage: load_external_integrations
+#
+load_external_integrations() {
+    # Determine the name of the current service (e.g., "keycloak" from "03_keycloak")
+    local service_name=$(basename "$PWD" | sed 's/^[0-9]*_//')
+    # The main project directory containing all services
+    local parent_dir="$(dirname "$PWD")"
+
+    echo ""
+    echo "─────────────────────────────────────────────────────────────────"
+    echo ">> Executing integrations for ${service_name} from other services..."
+    echo "─────────────────────────────────────────────────────────────────"
+
+    # Search for integration scripts targeting this service across all service folders
+    for ext_config in "$parent_dir"/*/integrations/${service_name}.sh; do
+        if [ -f "$ext_config" ]; then
+            echo ">> Running integration: $ext_config"
+            
+            # Source the integration script so it inherits our utility functions and environment
+            source "$ext_config"
+            
+            if [ $? -ne 0 ]; then
+                echo ">> ERROR: Integration $ext_config failed."
+                return 1
+            fi
+            
+            echo ">> Completed: $ext_config"
+            echo "-----------------------------------------------------------------"
+        fi
+    done
+
+    echo ">> All integrations executed successfully."
+    echo ""
+}

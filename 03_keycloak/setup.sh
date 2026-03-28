@@ -133,3 +133,5 @@ if [[ -n "$USER_ID" && "$USER_ID" != "null" ]]; then
 else
     echo "ERROR: User '${MAIN_USER_USERNAME}' not found in netzor realm."
 fi
+
+load_external_integrations

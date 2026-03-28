@@ -90,3 +90,5 @@ podman exec freeipa bash -c "
     # --setup-dns \
     # --auto-forwarders \
     # --allow-zone-overlap
+
+load_external_integrations
