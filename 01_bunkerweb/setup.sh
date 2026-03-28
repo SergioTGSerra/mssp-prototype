@@ -14,11 +14,8 @@ SERVER_NAMES=()
 # Diretório de configurações
 CONFIG_DIR="$(dirname "$0")/configs"
 
-echo "Loading configurations from $CONFIG_DIR..."
-
 for config in "$CONFIG_DIR"/*.sh; do
   if [ -f "$config" ]; then
-    echo "  - Sourcing $config"
     source "$config"
   fi
 done
