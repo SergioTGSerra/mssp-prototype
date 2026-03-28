@@ -108,17 +108,24 @@ else
 
 fi
 
-# Sync LDAP users to netzor realm
-# echo "Syncing LDAP users..."
-# LDAP_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get components -r netzor -q name=freeipa-ldap | jq -r '.[0].id')
-# if [[ -n "$LDAP_ID" && "$LDAP_ID" != "null" ]]; then
-#     podman exec keycloak /opt/keycloak/bin/kcadm.sh create user-storage/"${LDAP_ID}"/sync -r netzor -s "action=triggerFullSync" > /dev/null 2>&1
-#     sleep 5
-# fi
-
 # Assign realm-admin role to main user in netzor realm
 echo "Assigning realm-admin role to '${MAIN_USER_USERNAME}' in netzor realm..."
-USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r netzor -q username="${MAIN_USER_USERNAME}" | jq -r '.[0].id')
+MAX_USER_RETRIES=180
+USER_RETRY=0
+USER_ID="null"
+
+while [ $USER_RETRY -lt $MAX_USER_RETRIES ]; do
+    USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r netzor -q username="${MAIN_USER_USERNAME}" 2>/dev/null | jq -r '.[0].id' 2>/dev/null)
+    
+    if [[ -n "$USER_ID" && "$USER_ID" != "null" ]]; then
+        break
+    fi
+    
+    USER_RETRY=$((USER_RETRY + 1))
+    echo "Waiting for user '${MAIN_USER_USERNAME}' to be synced/available from FreeIPA (Attempt ${USER_RETRY}/${MAX_USER_RETRIES})..."
+    sleep 5
+done
+
 if [[ -n "$USER_ID" && "$USER_ID" != "null" ]]; then
     CLIENT_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId=realm-management | jq -r '.[0].id')
     if [[ -n "$CLIENT_ID" && "$CLIENT_ID" != "null" ]]; then
