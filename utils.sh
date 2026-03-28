@@ -2,6 +2,10 @@
 
 # ── Common Utilities ──────────────────────────────────────────────────────────
 
+# Store the absolute path of the project root at the time this script is sourced.
+# This ensures path resolution remains robust even if calling scripts use 'cd'.
+export UTILS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Initialize script environment
 # Sets exit on error (set -e).
 # Loads the main .env (from project root) first, then overrides with local .env if present.
@@ -281,10 +285,15 @@ freeipa_create_system_account() {
 # Usage: load_external_integrations
 #
 load_external_integrations() {
+    # Determine the project directory (where utils.sh is located)
+    local parent_dir="$UTILS_DIR"
+    
+    # Identify the script that called this function and extract its directory name
+    local caller_script="${BASH_SOURCE[1]}"
+    local caller_dir_name="$(basename "$(dirname "$caller_script")")"
+    
     # Determine the name of the current service (e.g., "keycloak" from "03_keycloak")
-    local service_name=$(basename "$PWD" | sed 's/^[0-9]*_//')
-    # The main project directory containing all services
-    local parent_dir="$(dirname "$PWD")"
+    local service_name=$(echo "$caller_dir_name" | sed 's/^[0-9]*_//')
 
     echo ""
     echo "─────────────────────────────────────────────────────────────────"
