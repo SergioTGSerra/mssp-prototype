@@ -42,6 +42,23 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
     # Configure SAML Plugin in GLPI Database
     echo "Configuring SAML Plugin settings in database..."
     
+    # Wait for Keycloak to be healthy before attempting SAML configuration
+    echo "Waiting for Keycloak to be healthy..."
+    MAX_KC_RETRIES=120
+    KC_RETRY_COUNT=0
+    until [[ "$(podman inspect --format='{{.State.Health.Status}}' keycloak 2>/dev/null)" == "healthy" ]] || [ $KC_RETRY_COUNT -eq $MAX_KC_RETRIES ]; do
+        KC_RETRY_COUNT=$((KC_RETRY_COUNT + 1))
+        if [ $KC_RETRY_COUNT -ge $MAX_KC_RETRIES ]; then
+            echo "ERROR: Keycloak failed to become healthy after ${MAX_KC_RETRIES} attempts. Cannot configure SAML."
+            exit 1
+        fi
+        sleep 5
+    done
+
+    # Authenticate kcadm inside Keycloak container
+    echo "Authenticating Keycloak Admin for GLPI configuration..."
+    podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+
     # Fetch Keycloak SAML Certificate using kcadm.sh (reliable internal method)
     CERT_CONTENT=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get keys -r netzor | jq -r '.keys[] | select(.type == "RSA" and .use == "SIG") | .certificate' | head -n 1)
     
