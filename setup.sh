@@ -1,18 +1,18 @@
 #!/bin/bash
 source utils.sh; script_init;
 
+# Create logs directory
+mkdir -p logs
+
 # 1. Setup Prerequisites (OpenSSL, Podman)
 echo ">> Step 0: Checking/Installing Prerequisites..."
 if [ -f "./prerequisites.sh" ]; then
-    ./prerequisites.sh
-    if [ $? -ne 0 ]; then
-        echo "Error: Prerequisites setup failed. Exiting."
+    ./prerequisites.sh 2>&1 | tee logs/prerequisites.log
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+        echo "Error: Prerequisites setup failed. Check logs/prerequisites.log. Exiting."
         exit 1
     fi
 fi
-
-# Create logs directory
-mkdir -p logs
 
 declare -A pids
 declare -A statuses
