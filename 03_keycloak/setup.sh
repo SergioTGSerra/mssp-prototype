@@ -32,6 +32,19 @@ if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor > /dev/nu
     }
 fi
 
+# Wait for FreeIPA to be healthy before configuring LDAP and User Permissions
+echo "Waiting for FreeIPA to be healthy before configuring LDAP and User Permissions..."
+MAX_IPA_RETRIES=120
+IPA_RETRY_COUNT=0
+until [[ "$(podman inspect --format='{{.State.Health.Status}}' freeipa 2>/dev/null)" == "healthy" ]] || [ $IPA_RETRY_COUNT -eq $MAX_IPA_RETRIES ]; do
+    IPA_RETRY_COUNT=$((IPA_RETRY_COUNT + 1))
+    if [ $IPA_RETRY_COUNT -ge $MAX_IPA_RETRIES ]; then
+        echo "ERROR: FreeIPA failed to become healthy after ${MAX_IPA_RETRIES} attempts."
+        exit 1
+    fi
+    sleep 5
+done
+
 # Create LDAP Provider
 echo "Creating 'freeipa-ldap' provider..."
 if ! podman exec keycloak /opt/keycloak/bin/kcadm.sh create components -r netzor \
