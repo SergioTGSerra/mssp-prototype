@@ -19,14 +19,7 @@ SERVER_NAMES=()
 source "$(dirname "$0")/core.sh"
 
 # 2. Load integrations provided by other services
-# This looks for files named 'bunkerweb.sh' inside the 'integrations' folder of any other service
-PARENT_DIR="$(dirname "$(dirname "$0")")"
-for ext_config in "$PARENT_DIR"/*/integrations/bunkerweb.sh; do
-  if [ -f "$ext_config" ]; then
-    source "$ext_config"
-    echo "Loaded integration: $ext_config"
-  fi
-done
+load_external_integrations
 
 # Start or create the BunkerWeb container
 if podman container exists bunkerweb; then
@@ -51,7 +44,7 @@ else
     -e LETS_ENCRYPT_CHALLENGE=dns \
     -e LETS_ENCRYPT_DNS_PROVIDER=cloudflare \
     -e USE_LETS_ENCRYPT_WILDCARD=yes \
-    -e USE_LETS_ENCRYPT_STAGING=no \
+    -e USE_LETS_ENCRYPT_STAGING=yes \
     -e AUTO_LETS_ENCRYPT=yes \
     -e LETS_ENCRYPT_DNS_CREDENTIAL_ITEM="${LETS_ENCRYPT_DNS_CREDENTIAL_ITEM}" \
     -e DISABLE_DEFAULT_SERVER=yes \
