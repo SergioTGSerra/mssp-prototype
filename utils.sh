@@ -292,7 +292,7 @@ load_external_integrations() {
     local caller_script="${BASH_SOURCE[1]}"
     local caller_dir_name="$(basename "$(dirname "$caller_script")")"
     
-    # Determine the name of the current service (e.g., "keycloak" from "03_keycloak")
+    # Determine the name of the current service
     local service_name=$(echo "$caller_dir_name" | sed 's/^[0-9]*_//')
 
     echo ""
