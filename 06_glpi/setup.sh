@@ -57,10 +57,15 @@ if [ ! -z "$GLPI_NETWORK_KEY" ]; then
 
     # Authenticate kcadm inside Keycloak container
     echo "Authenticating Keycloak Admin for GLPI configuration..."
-    podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+    podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --config /tmp/kcadm-${PROJECT_NAME}.config --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+
+    echo "Waiting for 'netzor' realm to be available..."
+    until podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor --config /tmp/kcadm-${PROJECT_NAME}.config > /dev/null 2>&1; do
+        sleep 5
+    done
 
     # Fetch Keycloak SAML Certificate using kcadm.sh (reliable internal method)
-    CERT_CONTENT=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get keys -r netzor | jq -r '.keys[] | select(.type == "RSA" and .use == "SIG") | .certificate' | head -n 1)
+    CERT_CONTENT=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get keys --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor | jq -r '.keys[] | select(.type == "RSA" and .use == "SIG") | .certificate' | head -n 1)
     
     if [ ! -z "$CERT_CONTENT" ]; then
         KEYCLOAK_CERT="-----BEGIN CERTIFICATE-----
@@ -165,18 +170,18 @@ EOF
     CLEAN_SP_CERT=$(podman exec glpi cat /tmp/sp_cert.pem | grep -v "BEGIN CERTIFICATE" | grep -v "END CERTIFICATE" | tr -d '\r\n')
     
     GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
-    CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes)
+    CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes)
     
     if [ ! -z "$CLIENT_UUID" ] && [ ! -z "$CLEAN_SP_CERT" ]; then
-         podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/${UUID_PART:-$CLIENT_UUID} -r netzor \
+         podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/${UUID_PART:-$CLIENT_UUID} --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
             -s 'attributes."saml.client.signature"="true"' \
             -s 'attributes."saml.signing.certificate"="'"$CLEAN_SP_CERT"'"' \
             && echo "Keycloak configured with GLPI signing certificate and signature verification ENABLED." || echo "Warning: Failed to update Keycloak with signing certificate."
             
          # Remove role_list scope to prevent duplicate 'Role' attributes error in GLPI
-         SCOPE_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get client-scopes -r netzor | jq -r '.[] | select(.name == "role_list") | .id')
+         SCOPE_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get client-scopes --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor | jq -r '.[] | select(.name == "role_list") | .id')
          if [ ! -z "$SCOPE_ID" ]; then
-             podman exec keycloak /opt/keycloak/bin/kcadm.sh delete clients/${CLIENT_UUID}/default-client-scopes/${SCOPE_ID} -r netzor 2>/dev/null || true
+             podman exec keycloak /opt/keycloak/bin/kcadm.sh delete clients/${CLIENT_UUID}/default-client-scopes/${SCOPE_ID} --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor 2>/dev/null || true
              echo "Removed 'role_list' scope from client."
          fi
          
@@ -187,7 +192,7 @@ EOF
             ATTR=$(echo $MAPPER | cut -d: -f2)
             SAML_ATTR=$(echo $MAPPER | cut -d: -f3)
             
-            podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients/${CLIENT_UUID}/protocol-mappers/models -r netzor \
+            podman exec keycloak /opt/keycloak/bin/kcadm.sh create clients/${CLIENT_UUID}/protocol-mappers/models --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
                 -s name=$NAME \
                 -s protocol=saml \
                 -s protocolMapper=saml-user-property-mapper \

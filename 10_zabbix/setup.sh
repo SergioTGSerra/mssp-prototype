@@ -42,9 +42,29 @@ prepare_zabbix_sp_certificate() {
 # ── IdP Certificate ──────────────────────────────────────────────────────────
 
 fetch_keycloak_idp_certificate() {
+    echo ">> Waiting for Keycloak to be healthy..."
+    local kc_max_retries=120
+    local kc_retries=0
+    until [[ "$(podman inspect --format='{{.State.Health.Status}}' keycloak 2>/dev/null)" == "healthy" ]] || [ $kc_retries -eq $kc_max_retries ]; do
+        kc_retries=$((kc_retries + 1))
+        if [ $kc_retries -ge $kc_max_retries ]; then
+            echo "ERROR: Keycloak failed to become healthy. Cannot configure SAML."
+            exit 1
+        fi
+        sleep 5
+    done
+    
+    echo ">> Authenticating Keycloak Admin for Zabbix configuration..."
+    podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --config /tmp/kcadm-${PROJECT_NAME}.config --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+
+    echo ">> Waiting for 'netzor' realm to be available..."
+    until podman exec keycloak /opt/keycloak/bin/kcadm.sh get realms/netzor --config /tmp/kcadm-${PROJECT_NAME}.config > /dev/null 2>&1; do
+        sleep 5
+    done
+
     echo ">> Fetching Keycloak SAML signing certificate..."
     local cert_content
-    cert_content=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get keys -r netzor \
+    cert_content=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get keys --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
         | jq -r '.keys[] | select(.type == "RSA" and .use == "SIG") | .certificate' \
         | head -n 1)
 
@@ -67,7 +87,7 @@ EOF
 configure_keycloak_saml_client() {
     # Get client UUID
     local client_uuid
-    client_uuid=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients -r netzor \
+    client_uuid=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
         -q clientId="${ZABBIX_SAML_SP_ENTITY_ID}" --fields id --format csv --noquotes)
 
     if [ -z "${client_uuid}" ]; then
@@ -80,7 +100,7 @@ configure_keycloak_saml_client() {
     clean_sp_cert=$(grep -v 'BEGIN CERTIFICATE' "${CERTS_DIR}/sp.crt" | grep -v 'END CERTIFICATE' | tr -d '\r\n')
 
     if [ -n "${clean_sp_cert}" ]; then
-        podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/"${client_uuid}" -r netzor \
+        podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/"${client_uuid}" --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
             -s 'attributes."saml.client.signature"="true"' \
             -s 'attributes."saml.signing.certificate"="'"${clean_sp_cert}"'"' > /dev/null \
             && echo ">> Keycloak configured with Zabbix SP signing certificate." \
@@ -90,13 +110,13 @@ configure_keycloak_saml_client() {
     # Remove all default client scopes to prevent duplicate SAML attributes
     echo ">> Removing default client scopes from Zabbix SAML client..."
     local scope_ids
-    scope_ids=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get \
+    scope_ids=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get client-scopes --config /tmp/kcadm-${PROJECT_NAME}.config \
         clients/"${client_uuid}"/default-client-scopes -r netzor \
         | jq -r '.[].id' 2>/dev/null || true)
 
     for scope_id in ${scope_ids}; do
         podman exec keycloak /opt/keycloak/bin/kcadm.sh delete \
-            clients/"${client_uuid}"/default-client-scopes/"${scope_id}" -r netzor 2>/dev/null || true
+            clients/"${client_uuid}"/default-client-scopes/"${scope_id}" --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor 2>/dev/null || true
     done
 
     # Configure SAML protocol mappers (compact loop like GLPI)
@@ -108,7 +128,7 @@ configure_keycloak_saml_client() {
         mapper_saml=$(echo "${mapper}" | cut -d: -f3)
 
         podman exec keycloak /opt/keycloak/bin/kcadm.sh create \
-            clients/"${client_uuid}"/protocol-mappers/models -r netzor \
+            clients/"${client_uuid}"/protocol-mappers/models --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
             -s "name=${mapper_name}" \
             -s "protocol=saml" \
             -s "protocolMapper=saml-user-property-mapper" \
@@ -121,7 +141,7 @@ configure_keycloak_saml_client() {
 
     # Groups mapper
     podman exec keycloak /opt/keycloak/bin/kcadm.sh create \
-        clients/"${client_uuid}"/protocol-mappers/models -r netzor \
+        clients/"${client_uuid}"/protocol-mappers/models --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
         -s "name=groups" \
         -s "protocol=saml" \
         -s "protocolMapper=saml-group-membership-mapper" \

@@ -104,9 +104,10 @@ podman exec freeipa bash -c "
 
 # Disable admin user in master realm keycloak
 echo "Blocking admin user in master realm..."
-ADMIN_USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users -r master -q username="${KEYCLOAK_ADMIN_USERNAME}" | jq -r '.[0].id')
+podman exec keycloak /opt/keycloak/bin/kcadm.sh config credentials --config /tmp/kcadm-main.config --server http://"${KEYCLOAK_HOSTNAME}" --realm master --user "${KEYCLOAK_ADMIN_USERNAME}" --password "${KEYCLOAK_ADMIN_PASSWORD}"
+ADMIN_USER_ID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get users --config /tmp/kcadm-main.config -r master -q username="${KEYCLOAK_ADMIN_USERNAME}" | jq -r '.[0].id')
 if [[ -n "$ADMIN_USER_ID" && "$ADMIN_USER_ID" != "null" ]]; then
-    podman exec keycloak /opt/keycloak/bin/kcadm.sh update users/"${ADMIN_USER_ID}" -r master -s enabled=false || {
+    podman exec keycloak /opt/keycloak/bin/kcadm.sh update users/"${ADMIN_USER_ID}" --config /tmp/kcadm-main.config -r master -s enabled=false || {
         echo "ERROR: Failed to block admin user in master realm."
     }
     echo "Admin user blocked successfully in master realm."
