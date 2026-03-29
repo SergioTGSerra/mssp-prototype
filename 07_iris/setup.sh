@@ -1,9 +1,8 @@
 #!/bin/bash
-source utils.sh; script_init;
+source "$(dirname "$0")/../utils.sh"; script_init;
 
-cd "$(dirname "$0")"
-PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
-podman compose -p "$PROJECT_NAME" -f compose.yaml up -d
+# Start IRIS with Podman Compose
+podman compose -p "$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_//')" -f "$(dirname "$0")/compose.yaml" up -d
 
 # Grant admin permissions to MAIN_USER
 # Pre-creates the user in the DB so that on first OAuth login,

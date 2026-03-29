@@ -1,6 +1,6 @@
 #!/bin/bash
 # Initialize utility scripts and common variables
-source utils.sh; script_init;
+source "$(dirname "$0")/../utils.sh"; script_init;
 
 # Create dedicated Podman network for FreeIPA if it doesn't already exist
 podman network exists ipa_default || podman network create ipa_default

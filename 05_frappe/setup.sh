@@ -1,10 +1,9 @@
 #!/bin/bash
-source utils.sh; script_init;
+source "$(dirname "$0")/../utils.sh"; script_init;
 
-cd "$(dirname "$0")"
-
-APPS_JSON_BASE64=$(base64 -w 0 apps.json)
-PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
+# Initialize project name and apps JSON
+PROJECT_NAME=$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_//')
+APPS_JSON_BASE64=$(base64 -w 0 "$(dirname "$0")/apps.json")
 
 if ! podman image exists frappe:16; then
   podman build \
@@ -16,11 +15,11 @@ if ! podman image exists frappe:16; then
 fi
 
 podman compose \
-  --env-file .env \
+  --env-file "$(dirname "$0")/.env" \
   -p "$PROJECT_NAME" \
-  -f compose.yaml \
-  -f overrides/compose.mariadb.yaml \
-  -f overrides/compose.redis.yaml \
+  -f "$(dirname "$0")/compose.yaml" \
+  -f "$(dirname "$0")/overrides/compose.mariadb.yaml" \
+  -f "$(dirname "$0")/overrides/compose.redis.yaml" \
   up -d
 
 podman exec frappe-backend bench new-site erp.netzor.pt --admin-password="${FRAPPE_ADMIN_PASSWORD}" --db-root-password=123 --mariadb-user-host-login-scope='%' --install-app erpnext --install-app hrms

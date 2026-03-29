@@ -1,10 +1,10 @@
 #!/bin/bash
-source utils.sh; script_init;
+source "$(dirname "$0")/../utils.sh"; script_init;
 
-cd "$(dirname "$0")"
-PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
+SCRIPTPATH="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_NAME=$(basename "${SCRIPTPATH}" | sed 's/^[0-9]*_//')
 
-CERTS_DIR="${PWD}/certs"
+CERTS_DIR="${SCRIPTPATH}/certs"
 ZABBIX_SAML_SP_ENTITY_ID="${ZABBIX_SAML_SP_ENTITY_ID:-https://${ZABBIX_HOSTNAME}/}"
 ZABBIX_SAML_IDP_ENTITY_ID="${ZABBIX_SAML_IDP_ENTITY_ID:-https://${KEYCLOAK_HOSTNAME}/realms/netzor}"
 ZABBIX_SAML_SSO_URL="${ZABBIX_SAML_SSO_URL:-https://${KEYCLOAK_HOSTNAME}/realms/netzor/protocol/saml}"
@@ -376,7 +376,7 @@ configure_zabbix_saml() {
 prepare_zabbix_sp_certificate
 fetch_keycloak_idp_certificate
 
-podman compose -p "${PROJECT_NAME}" -f compose.yaml up -d
+podman compose -p "${PROJECT_NAME}" -f "${SCRIPTPATH}/compose.yaml" up -d
 
 # Wait for Zabbix to be ready
 echo ">> Waiting for Zabbix to be ready..."

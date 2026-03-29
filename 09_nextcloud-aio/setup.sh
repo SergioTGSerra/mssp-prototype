@@ -1,9 +1,8 @@
 #!/bin/bash
-source utils.sh; script_init;
+source "$(dirname "$0")/../utils.sh"; script_init;
 
-cd "$(dirname "$0")"
-PROJECT_NAME=$(basename "$PWD" | sed 's/^[0-9]*_//')
-podman compose -p "$PROJECT_NAME" -f compose.yaml --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
+PROJECT_NAME=$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_//')
+podman compose -p "$PROJECT_NAME" -f "$(dirname "$0")/compose.yaml" --profile onlyoffice --profile talk --profile clamav --profile imaginary --profile fulltextsearch --profile whiteboard up -d
 
 # 5. Configure Maintenance Window (4 AM to 8 AM)
 #podman exec -u www-data nextcloud php occ config:system:set maintenance_window_start --value=4 --type=integer
