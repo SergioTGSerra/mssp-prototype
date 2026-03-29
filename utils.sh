@@ -28,6 +28,86 @@ script_init() {
     set +a
 }
 
+# Wait for a podman container to become healthy
+#
+# Usage:
+#   wait_for_container_healthy <container_name> [max_retries] [retry_interval]
+#
+# Arguments:
+#   container_name - Name of the container to check
+#   max_retries    - (optional) Max number of retries, default 180
+#   retry_interval - (optional) Sleep interval in seconds, default 5
+#
+# Returns 0 on success, 1 on timeout or error.
+wait_for_container_healthy() {
+    local container_name="$1"
+    local max_retries="${2:-180}"
+    local retry_interval="${3:-5}"
+    local retry_count=0
+
+    if [ -z "$container_name" ]; then
+        echo "ERROR: wait_for_container_healthy requires a container_name."
+        return 1
+    fi
+
+    echo ">> Waiting for container '${container_name}' to become healthy..."
+    until [[ "$(podman inspect --format='{{.State.Health.Status}}' "${container_name}" 2>/dev/null)" == "healthy" ]] || [ $retry_count -eq $max_retries ]; do
+        retry_count=$((retry_count + 1))
+        if [ $retry_count -ge $max_retries ]; then
+            echo "ERROR: Container '${container_name}' failed to become healthy after $((max_retries * retry_interval)) seconds."
+            return 1
+        fi
+        sleep "$retry_interval"
+    done
+
+    echo ">> Container '${container_name}' is healthy."
+    return 0
+}
+
+# Wait for a service setup script to finish successfully in the parallel execution
+#
+# Usage:
+#   wait_for_service_done <service_name> [max_retries] [retry_interval]
+#
+# Arguments:
+#   service_name   - The name of the service (e.g. 'freeipa' for '02_freeipa')
+#   max_retries    - (optional) Max number of retries, default 180
+#   retry_interval - (optional) Sleep interval in seconds, default 5
+#
+# Returns 0 on success, 1 on failure or timeout.
+wait_for_service_done() {
+    local service_name="$1"
+    local max_retries="${2:-180}"
+    local retry_interval="${3:-5}"
+    local retry_count=0
+    local exit_file="${UTILS_DIR}/logs/.${service_name}.exit"
+
+    if [ -z "$service_name" ]; then
+        echo "ERROR: wait_for_service_done requires a service_name."
+        return 1
+    fi
+
+    echo ">> Waiting for service setup '${service_name}' to complete..."
+    until [ -f "$exit_file" ] || [ $retry_count -ge $max_retries ]; do
+        retry_count=$((retry_count + 1))
+        sleep "$retry_interval"
+    done
+
+    if [ ! -f "$exit_file" ]; then
+        echo "ERROR: Service setup '${service_name}' did not complete after $((max_retries * retry_interval)) seconds."
+        return 1
+    fi
+
+    local exit_code="$(cat "$exit_file")"
+    if [ "$exit_code" -eq 0 ]; then
+        echo ">> Service setup '${service_name}' completed."
+        return 0
+    else
+        echo "ERROR: Service setup '${service_name}' failed with exit code ${exit_code}."
+        return 1
+    fi
+}
+
 # ── Keycloak Utilities ────────────────────────────────────────────────────────
 
 # Create an OIDC client in Keycloak (idempotent).

@@ -39,16 +39,7 @@ fi
 
 # Poll the container health status until it becomes 'healthy' or reaches max retries
 # This ensures that subsequent configuration commands are only run once the server is fully ready
-MAX_RETRIES=120
-RETRY_COUNT=0
-until [[ "$(podman inspect --format='{{.State.Health.Status}}' freeipa)" == "healthy" ]] || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "ERROR: FreeIPA failed to become healthy after ${MAX_RETRIES} attempts."
-        exit 1
-    fi
-    sleep 5
-done
+wait_for_container_healthy freeipa
 
 # Provision a system-accounts group with a custom password policy (no expiry)
 # This is useful for service accounts that require persistent credentials
