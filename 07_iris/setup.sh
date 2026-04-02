@@ -11,6 +11,11 @@ podman compose -p "$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_
 echo ">> Waiting for IRIS to initialize the database..."
 wait_for_container_healthy "iriswebapp_db"
 
+echo ">> Waiting for 'user' table to be created by IRIS..."
+until podman exec iriswebapp_db psql -U postgres -d iris_db -t -c "SELECT to_regclass('public.\"user\"');" | grep -q "user"; do
+  sleep 2
+done
+
 echo ">> Granting admin permissions to '${MAIN_USER_USERNAME}' in IRIS..."
 podman exec iriswebapp_db psql -U postgres -d iris_db -c "
   INSERT INTO \"user\" (\"user\", name, email, password, active)
@@ -26,10 +31,10 @@ podman exec iriswebapp_db psql -U postgres -d iris_db -c "
   );
 
   INSERT INTO user_organisation (user_id, org_id, is_primary_org)
-  SELECT u.id, (SELECT org_id FROM organisations LIMIT 1), true
+  SELECT u.id, 1, true
   FROM \"user\" u
   WHERE u.\"user\" = '${MAIN_USER_USERNAME}'
   AND NOT EXISTS (
-    SELECT 1 FROM user_organisation uo WHERE uo.user_id = u.id AND uo.org_id = (SELECT org_id FROM organisations LIMIT 1)
+    SELECT 1 FROM user_organisation uo WHERE uo.user_id = u.id AND uo.org_id = 1
   );
 "
