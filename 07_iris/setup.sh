@@ -1,6 +1,10 @@
 #!/bin/bash
 source "$(dirname "$0")/../utils.sh"; script_init;
 
+# Wait for Keycloak to be fully configured before starting Iris
+# This prevents OIDC synchronization issues (stale signing keys)
+wait_for_service_done keycloak
+
 # Start IRIS with Podman Compose
 podman compose -p "$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_//')" -f "$(dirname "$0")/compose.yaml" up -d
 
