@@ -11,8 +11,11 @@ podman compose -p "$(basename "$(cd "$(dirname "$0")" && pwd)" | sed 's/^[0-9]*_
 echo ">> Waiting for IRIS to initialize the database..."
 wait_for_container_healthy "iriswebapp_db"
 
-echo ">> Waiting for 'user' table to be created by IRIS..."
-until podman exec iriswebapp_db psql -U postgres -d iris_db -t -c "SELECT to_regclass('public.\"user\"');" | grep -q "user"; do
+echo ">> Waiting for database tables and default data to be initialized by IRIS..."
+until podman exec iriswebapp_db psql -U postgres -d iris_db -t -c "SELECT 1 FROM organisations WHERE org_id = 1;" 2>/dev/null | grep -q 1; do
+  sleep 2
+done
+until podman exec iriswebapp_db psql -U postgres -d iris_db -t -c "SELECT 1 FROM groups WHERE group_name = 'Administrators';" 2>/dev/null | grep -q 1; do
   sleep 2
 done
 
