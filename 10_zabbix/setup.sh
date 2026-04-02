@@ -86,9 +86,17 @@ EOF
 
 configure_keycloak_saml_client() {
     # Get client UUID
-    local client_uuid
-    client_uuid=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
-        -q clientId="${ZABBIX_SAML_SP_ENTITY_ID}" --fields id --format csv --noquotes)
+    local client_uuid=""
+    local retry=0
+    echo ">> Waiting for Keycloak SAML client to be created by integration script..."
+    while [ -z "${client_uuid}" ] && [ $retry -lt 60 ]; do
+        client_uuid=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
+            -q clientId="${ZABBIX_SAML_SP_ENTITY_ID}" --fields id --format csv --noquotes 2>/dev/null)
+        if [ -z "${client_uuid}" ]; then
+            retry=$((retry + 1))
+            sleep 5
+        fi
+    done
 
     if [ -z "${client_uuid}" ]; then
         echo "ERROR: Failed to retrieve the Keycloak SAML client UUID for Zabbix."

@@ -169,7 +169,16 @@ EOF
     CLEAN_SP_CERT=$(podman exec glpi cat /tmp/sp_cert.pem | grep -v "BEGIN CERTIFICATE" | grep -v "END CERTIFICATE" | tr -d '\r\n')
     
     GLPI_CLIENT_ID="https://${GLPI_HOSTNAME}/"
-    CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes)
+    CLIENT_UUID=""
+    RETRY=0
+    echo "Waiting for GLPI SAML client to be created by Keycloak integration..."
+    while [ -z "${CLIENT_UUID}" ] && [ $RETRY -lt 60 ]; do
+        CLIENT_UUID=$(podman exec keycloak /opt/keycloak/bin/kcadm.sh get clients --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor -q clientId="${GLPI_CLIENT_ID}" --fields id --format csv --noquotes 2>/dev/null)
+        if [ -z "${CLIENT_UUID}" ]; then
+            RETRY=$((RETRY + 1))
+            sleep 5
+        fi
+    done
     
     if [ ! -z "$CLIENT_UUID" ] && [ ! -z "$CLEAN_SP_CERT" ]; then
          podman exec keycloak /opt/keycloak/bin/kcadm.sh update clients/${UUID_PART:-$CLIENT_UUID} --config /tmp/kcadm-${PROJECT_NAME}.config -r netzor \
