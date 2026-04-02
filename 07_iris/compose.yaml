@@ -40,11 +40,6 @@ services:
       - iris_backend
     volumes:
       - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   app:
     image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
