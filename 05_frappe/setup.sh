@@ -11,7 +11,7 @@ if ! podman image exists frappe:16; then
    --build-arg=FRAPPE_BRANCH=version-16 \
    --build-arg=APPS_JSON_BASE64=$APPS_JSON_BASE64 \
    --tag=frappe:16 \
-   --file=images/layered/Containerfile .
+   --file="$(dirname "$0")/images/layered/Containerfile" "$(dirname "$0")"
 fi
 
 podman compose \
